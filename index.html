@@ -1,0 +1,1058 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a43">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>AI-Teacher's Navigator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    :root{
+      --navy:#102a43;--blue:#1677ff;--cyan:#2ec4b6;--cream:#f7f9fc;
+      --ink:#243b53;--muted:#627d98;--line:#d9e2ec;--gold:#f6c453;
+      --danger:#d64545;--ok:#17866f;--shadow:0 16px 45px rgba(16,42,67,.10);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic UI","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;line-height:1.75}
+    button,.btn{font-weight:700}
+    .app-shell{min-height:100vh}
+    .side{position:fixed;inset:0 auto 0 0;width:270px;background:var(--navy);color:#fff;padding:28px 20px;z-index:1030;overflow-y:auto}
+    .brand{display:flex;gap:12px;align-items:center;margin-bottom:28px}
+    .brand-mark{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),#64d8ff);font-size:25px;box-shadow:0 8px 24px #0003}
+    .brand small{display:block;color:#9fb3c8;font-weight:600;letter-spacing:.04em}
+    .brand strong{font-size:1.03rem}
+    .nav-step{width:100%;border:0;background:transparent;color:#bcccdc;text-align:left;padding:11px 12px;border-radius:12px;margin:3px 0;display:flex;gap:11px;align-items:center;font-size:.89rem}
+    .nav-step:hover,.nav-step.active{color:#fff;background:#ffffff17}
+    .nav-step.active{box-shadow:inset 3px 0 var(--cyan)}
+    .step-dot{flex:0 0 28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#ffffff12;font-size:.75rem}
+    .nav-step.done .step-dot{background:var(--cyan);color:var(--navy)}
+    .side-progress{border-top:1px solid #ffffff1c;margin-top:22px;padding-top:18px}
+    .side-progress .progress{height:7px;background:#ffffff1a}
+    .side-progress .progress-bar{background:var(--cyan)}
+    main{margin-left:270px;min-height:100vh}
+    .topbar{height:76px;padding:0 4vw;display:flex;align-items:center;justify-content:space-between;background:#ffffffd9;backdrop-filter:blur(12px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1020}
+    .mobile-brand{font-weight:800;color:var(--navy)}
+    .score-pill{background:#e7f8f4;color:#116b5a;padding:8px 14px;border-radius:999px;font-weight:800;font-size:.86rem}
+    .page{display:none;padding:clamp(25px,4.5vw,66px);max-width:1240px;margin:auto;animation:rise .35s ease}
+    .page.active{display:block}
+    @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .eyebrow{color:var(--blue);font-weight:800;letter-spacing:.12em;font-size:.78rem;text-transform:uppercase}
+    h1,h2,h3{color:var(--navy);line-height:1.35;font-weight:800}
+    .display-title{font-size:clamp(2rem,5vw,4.4rem);letter-spacing:-.04em;max-width:850px}
+    .lead-copy{font-size:clamp(1rem,1.6vw,1.2rem);color:var(--muted);max-width:760px}
+    .hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#fff 45%,#e8f7f4);border:1px solid var(--line);border-radius:28px;padding:clamp(28px,6vw,72px);box-shadow:var(--shadow)}
+    .hero:after{content:"✦";position:absolute;right:5%;top:5%;font-size:clamp(6rem,16vw,13rem);color:#20aa9212;transform:rotate(12deg)}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}
+    .feature{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px}
+    .feature .icon{font-size:1.6rem}
+    .feature strong{display:block;color:var(--navy);margin-top:7px}
+    .section-head{display:flex;justify-content:space-between;gap:18px;align-items:end;margin-bottom:28px}
+    .section-head p{margin:0;color:var(--muted);max-width:620px}
+    .panel{background:#fff;border:1px solid var(--line);border-radius:22px;padding:clamp(20px,3vw,34px);box-shadow:var(--shadow)}
+    .question-number{font-size:.82rem;color:var(--muted);font-weight:800}
+    .question-title{font-size:clamp(1.1rem,2.2vw,1.5rem);margin:10px 0 22px}
+    .choice{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);padding:14px 16px;border-radius:13px;margin:10px 0;color:var(--ink);transition:.18s}
+    .choice:hover:not(:disabled){border-color:var(--blue);transform:translateX(3px)}
+    .choice.selected{border-color:var(--blue);background:#edf5ff;box-shadow:0 0 0 3px rgba(22,119,255,.12)}
+    .choice.correct{border-color:var(--ok);background:#e9f8f3;color:#0b6654}
+    .choice.wrong{border-color:var(--danger);background:#fff1f1;color:#a52f2f}
+    .choice:disabled{opacity:.9}
+    .detector-choice.selected{box-shadow:0 0 0 3px rgba(22,119,255,.18);background:#edf5ff}
+    .feedback{display:none;border-left:5px solid var(--blue);background:#edf5ff;border-radius:12px;padding:18px;margin-top:20px}
+    .feedback.show{display:block;animation:rise .25s ease}
+    .feedback strong{color:var(--navy)}
+    .feedback.score-100{background:#e4f7ee;border-color:#16866f;color:#075c4b}
+    .feedback.score-80{background:#e3f5f6;border-color:#148a96;color:#075963}
+    .feedback.score-50{background:#fff6d8;border-color:#d49b16;color:#664600}
+    .feedback.score-30{background:#fff0df;border-color:#e36f16;color:#7a3100}
+    .feedback.score-0{background:#ffe6e8;border-color:#cf304a;color:#801627}
+    .feedback.score-100 strong,.feedback.score-80 strong,.feedback.score-50 strong,.feedback.score-30 strong,.feedback.score-0 strong{color:inherit}
+    .mini-progress{height:9px;background:#e8eef5;border-radius:99px;overflow:hidden}
+    .mini-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:.3s}
+    .scenario-text{font-size:1.08rem;background:#f7fafc;border-radius:15px;padding:20px;border-left:4px solid var(--gold)}
+    .meter{height:15px;border-radius:99px;background:linear-gradient(90deg,#2ec4b6 0 60%,#f6c453 60% 75%,#ef7b7b 75%);position:relative;margin:34px 0 12px}
+    .meter-pin{position:absolute;top:-9px;width:6px;height:33px;background:var(--navy);border-radius:5px;transition:.5s}
+    .meter-labels{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted)}
+    textarea.form-control{min-height:150px;border-radius:15px;border:1.5px solid var(--line);padding:16px}
+    .diagnosis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .diagnosis-item{border:1px solid var(--line);border-radius:15px;padding:16px;background:#f8fbfe}
+    .diagnosis-item.found{border-color:var(--ok);background:#ecf9f5}
+    .badge-title{display:inline-block;padding:8px 15px;border-radius:999px;background:var(--navy);color:#fff;font-weight:800}
+    .story-stage{min-height:390px;display:flex;flex-direction:column;justify-content:center}
+    .story-icon{font-size:3rem}
+    .story-choice{border:1px solid var(--line);background:#fff;border-radius:14px;padding:16px;margin:7px 0;text-align:left}
+    .story-choice:hover{border-color:var(--blue);box-shadow:0 8px 20px #1677ff10}
+    .story-choice.selected{border-color:var(--blue);background:#edf5ff;box-shadow:0 0 0 3px rgba(22,119,255,.12)}
+    .alert-card{border-radius:17px;padding:22px;background:#fff5e5;border:1px solid #f4c76d}
+    .growth-layout{display:grid;grid-template-columns:.8fr 1.2fr;gap:22px;align-items:stretch}
+    .avatar-card{text-align:center;background:linear-gradient(150deg,#102a43,#1f557c);color:white;border-radius:22px;padding:34px}
+    .avatar{font-size:6rem;filter:drop-shadow(0 12px 15px #0005)}
+    .avatar-card h3{color:#fff}
+    .level-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+    .level-bar span{height:9px;border-radius:9px;background:#ffffff2b}
+    .level-bar span.on{background:var(--cyan)}
+    .radio-card{background:linear-gradient(150deg,#172b4d,#3b1d59);color:#fff;border-radius:25px;padding:clamp(25px,5vw,52px);box-shadow:var(--shadow)}
+    .radio-card h2,.radio-card h3{color:#fff}
+    .on-air{display:inline-flex;align-items:center;gap:8px;background:#e23e57;padding:7px 13px;border-radius:999px;font-weight:800;font-size:.75rem;letter-spacing:.1em}
+    .on-air i{width:8px;height:8px;background:#fff;border-radius:50%;animation:pulse 1.2s infinite}
+    @keyframes pulse{50%{opacity:.35}}
+    .script{font-size:clamp(1rem,1.8vw,1.18rem);line-height:2;background:#ffffff0e;border:1px solid #ffffff22;padding:24px;border-radius:16px;white-space:pre-line}
+    .source-list a{color:#315f8f}
+    .toast-note{position:fixed;right:22px;bottom:22px;background:var(--navy);color:#fff;padding:13px 18px;border-radius:12px;z-index:2000;box-shadow:var(--shadow)}
+    body.dark-mode{background:#09111f;color:#d9e5f2}
+    .dark-mode .topbar{background:#101b2ddd;border-color:#2b3c52}
+    .dark-mode .mobile-brand,.dark-mode h1,.dark-mode h2,.dark-mode h3{color:#f1f6fb}
+    .dark-mode .hero,.dark-mode .panel,.dark-mode .feature,.dark-mode .choice,.dark-mode .story-choice,.dark-mode .diagnosis-item{background:#142238;color:#d9e5f2;border-color:#30445d}
+    .dark-mode .hero{background:linear-gradient(135deg,#142238 45%,#103333)}
+    .dark-mode .bg-white,.dark-mode .bg-light{background:#172840!important;color:#d9e5f2!important}
+    .dark-mode .text-secondary,.dark-mode .text-muted{color:#a9bdd0!important}
+    .dark-mode .form-control,.dark-mode .form-select{background:#0e1a2b;color:#eef6ff;border-color:#3a506b}
+    .dark-mode .form-control::placeholder{color:#8298ad}
+    .dark-mode .scenario-text{background:#1b2b43;color:#e7eef6}
+    .dark-mode .feedback{background:#132e4d;color:#e7eef6}
+    .dark-mode .feedback strong{color:#ffffff}
+    .dark-mode .feedback .small,.dark-mode .feedback small{color:#c9d9ea}
+    .dark-mode .feedback.score-100{background:#0d493d;color:#e8fff7;border-color:#44d0ad}
+    .dark-mode .feedback.score-80{background:#104650;color:#e8fdff;border-color:#51c7d1}
+    .dark-mode .feedback.score-50{background:#594610;color:#fff8cf;border-color:#efc04b}
+    .dark-mode .feedback.score-30{background:#632f0f;color:#fff0de;border-color:#ff9848}
+    .dark-mode .feedback.score-0{background:#641827;color:#ffecef;border-color:#ff647d}
+    .dark-mode .alert-card{background:#3b2d14;color:#fff4d6;border-color:#a97a28}
+    .dark-mode .alert-card strong{color:#ffffff}
+    .dark-mode .avatar-card .text-white-50{color:#d5e2ef!important}
+    .dark-mode .choice.selected,.dark-mode .story-choice.selected,.dark-mode .detector-choice.selected{background:#17375d}
+    .dark-mode .source-list a{color:#7eb8ff}
+    .theme-choice{cursor:pointer;border:1px solid var(--line);border-radius:12px;padding:9px 13px}
+    .dark-mode .theme-choice{border-color:#40546c}
+    .radar-wrap{width:100%;min-height:350px}
+    .radar-wrap svg{display:block;width:100%;max-width:520px;margin:auto}
+    @media(max-width:991px){
+      .side{transform:translateX(-100%);transition:.25s;width:285px}.side.open{transform:none}
+      main{margin-left:0}.feature-grid{grid-template-columns:1fr 1fr}.growth-layout{grid-template-columns:1fr}
+    }
+    @media(max-width:620px){
+      .page{padding:22px 15px 40px}.topbar{height:64px;padding:0 15px}
+      .feature-grid,.diagnosis-grid{grid-template-columns:1fr}.hero{border-radius:20px;padding:27px 20px}
+      .section-head{display:block}.section-head p{margin-top:8px}
+      .panel{border-radius:17px;padding:18px}.score-pill{font-size:.72rem;padding:6px 9px}
+    }
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="side" id="sidebar" aria-label="セクションナビゲーション">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">🧭</div>
+      <div><small>AI LITERACY LAB</small><strong>Teacher's Navigator</strong></div>
+    </div>
+    <nav id="stepNav"></nav>
+    <div class="side-progress">
+      <div class="d-flex justify-content-between small mb-2"><span>本日の航海</span><strong id="sidePercent">0%</strong></div>
+      <div class="progress"><div class="progress-bar" id="overallBar" style="width:0%"></div></div>
+      <p class="small text-white-50 mt-3 mb-0">判断は人間に。AIは頼れる副操縦士に。</p>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-sm btn-outline-secondary d-lg-none" id="menuBtn" aria-label="メニューを開く">☰</button>
+        <span class="mobile-brand d-none d-sm-inline">AI-Teacher's Navigator</span>
+      </div>
+      <div class="score-pill">✨ ナビスコア <span id="headerScore">0</span>点 / 100点</div>
+    </header>
+
+    <section class="page active" id="page-home">
+      <div class="hero">
+        <div class="eyebrow">MEXT GUIDELINE VER. 2.0</div>
+        <h1 class="display-title mt-3">AIを怖がらず、<br>AIに任せきらない。</h1>
+        <p class="lead-copy mt-4">教職員のための、約15分の体験型AIリテラシー研修。リスクを見抜く力と、校務を軽やかにする使い方を一緒に育てます。</p>
+        <div class="bg-white border rounded-4 p-3 mt-4 position-relative" style="z-index:1;max-width:680px">
+          <label for="accountName" class="form-label fw-bold">最初にアカウント名を入力してください</label>
+          <div class="input-group">
+            <input id="accountName" class="form-control" maxlength="30" placeholder="例：さくら先生">
+            <button class="btn btn-dark" onclick="setAccount()">この名前で利用</button>
+          </div>
+          <div id="accountStatus" class="small text-secondary mt-2">この端末内だけに、結果と出題内容を保存します。本名でなくても構いません。</div>
+          <button id="weakChallengeBtn" class="btn btn-outline-warning btn-sm mt-2 d-none" onclick="startWeakChallenge()">前回と同じ問題で苦手克服チャレンジ</button>
+          <button class="btn btn-outline-danger btn-sm mt-2" onclick="clearLocalData()">この端末の保存データを削除</button>
+          <div class="mt-3">
+            <div class="small fw-bold mb-2">表示モードを選択</div>
+            <div class="d-flex flex-wrap gap-2">
+              <label class="theme-choice"><input type="radio" name="themeMode" value="light" checked onchange="setTheme('light')"> ☀️ ライトモード</label>
+              <label class="theme-choice"><input type="radio" name="themeMode" value="dark" onchange="setTheme('dark')"> 🌙 ダークモード</label>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex flex-wrap gap-3 mt-4">
+          <button class="btn btn-primary btn-lg px-4" onclick="startChallenge()">航海をはじめる →</button>
+          <button class="btn btn-outline-secondary btn-lg" onclick="enterSection('maturity')">現在地を見る</button>
+        </div>
+      </div>
+      <div class="feature-grid">
+        <div class="feature"><span class="icon">🧠</span><strong>判断力</strong><span class="small text-secondary">ハルシネーションとバイアスを見抜く</span></div>
+        <div class="feature"><span class="icon">🛡️</span><strong>安全性</strong><span class="small text-secondary">個人情報・著作権・データを守る</span></div>
+        <div class="feature"><span class="icon">🚀</span><strong>活用力</strong><span class="small text-secondary">良いプロンプトで働き方改革へ</span></div>
+      </div>
+      <div class="alert alert-light border mt-4 mb-0 small"><strong>プライバシーと安全性：</strong>本アプリは端末内だけで動作し、入力内容を外部へ送信しません。得点履歴とニックネームはこのブラウザ内に保存されます。共有端末では利用後に保存データを削除してください。実在の児童生徒名・成績・健康情報・相談記録などは、練習でも入力しないでください。</div>
+    </section>
+
+    <section class="page" id="page-quiz">
+      <div class="section-head">
+        <div><div class="eyebrow">SECTION 01</div><h2>リテラシー・チェック</h2></div>
+        <p>全10問・各5択。回答直後の解説が、この研修のいちばん大切な部分です。</p>
+      </div>
+      <div class="panel">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="question-number" id="quizCount"></span><span class="small fw-bold" id="quizScore"></span>
+        </div>
+        <div class="mini-progress"><span id="quizBar"></span></div>
+        <h3 class="question-title" id="quizQuestion"></h3>
+        <div id="quizChoices"></div>
+        <div class="feedback" id="quizFeedback" aria-live="polite"></div>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button class="btn btn-outline-primary d-none" id="quizConfirm">この回答で確定</button>
+          <button class="btn btn-primary d-none" id="quizNext">次の問題へ →</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-detector">
+      <div class="section-head">
+        <div><div class="eyebrow">SECTION 02</div><h2>AI検出による誤判定を防ぐ</h2></div>
+        <p>文章だけを見て「AI生成」と断定できるでしょうか。検出器の確率表示は、事実認定ではありません。</p>
+      </div>
+      <div class="panel">
+        <div class="d-flex justify-content-between"><span class="badge text-bg-light" id="detectCase"></span><span class="small text-secondary">AI検出シミュレーター</span></div>
+        <blockquote class="scenario-text mt-3" id="detectText"></blockquote>
+        <p class="fw-bold">この文章は、どちらが書いたと思いますか？</p>
+        <div class="d-grid d-sm-flex gap-2">
+          <button class="btn btn-outline-primary flex-fill py-3 detector-choice" data-detector-choice="ai" aria-pressed="false" onclick="selectDetectorChoice('ai')">🤖 AIが生成</button>
+          <button class="btn btn-outline-success flex-fill py-3 detector-choice" data-detector-choice="human" aria-pressed="false" onclick="selectDetectorChoice('human')">✍️ 人間が執筆</button>
+        </div>
+        <div class="text-end mt-3"><button class="btn btn-outline-primary d-none" id="detectorConfirm" onclick="confirmDetectorChoice()">この回答で確定</button></div>
+        <div id="detectResult" class="mt-4" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-prompt">
+      <div class="section-head">
+        <div><div class="eyebrow">SECTION 03</div><h2>プロンプト・サンドボックス</h2></div>
+        <p>「役割・命令・条件」の3点セットで、AIとの往復を短く、成果物を使いやすく。</p>
+      </div>
+      <div class="panel">
+        <label for="promptTask" class="form-label fw-bold">STEP 1　作成する校務文書を選ぶ</label>
+        <select id="promptTask" class="form-select form-select-lg mb-3" onchange="setPromptTask()">
+          <option value="">課題を選択してください</option>
+          <option value="trip">修学旅行に関する保護者あて文書</option>
+          <option value="festival">文化祭開催の他校生徒会へのお知らせ</option>
+          <option value="camp">部活動合宿にあたっての保護者への協力依頼</option>
+          <option value="meeting">個人面談日程希望調査の案内</option>
+          <option value="training">校内生成AI研修の開催案内</option>
+        </select>
+        <div id="taskBrief" class="alert alert-info">課題を選ぶと、文書の目的・読み手・必須事項が表示されます。</div>
+        <label for="promptInput" class="form-label fw-bold">STEP 2　AIへの指示文を書く</label>
+        <textarea id="promptInput" class="form-control" placeholder="例：あなたは中学校の教員です。保護者向けの学級通信の巻頭言を、400字以内・温かみのあるトーンで作成してください。個人情報は含めず、事実確認が必要な箇所を明示してください。"></textarea>
+        <div class="d-flex flex-wrap gap-2 mt-3">
+          <button class="btn btn-primary" onclick="diagnosePrompt()">プロンプトを診断</button>
+          <button class="btn btn-outline-secondary" onclick="insertSample()">誤りを含む例を入れる</button>
+        </div>
+        <div id="promptResult" class="mt-4"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-story">
+      <div class="section-head">
+        <div><div class="eyebrow">SECTION 04</div><h2>ヒヤリハット分岐ゲーム</h2></div>
+        <p>設定変更と公開ボタン。そのワンクリックの前に、立ち止まる習慣を。</p>
+      </div>
+      <div class="panel story-stage" id="storyStage"></div>
+    </section>
+
+    <section class="page" id="page-maturity">
+      <div class="section-head">
+        <div><div class="eyebrow">SECTION 05</div><h2>AI活用成熟度</h2></div>
+        <p>点数はゴールではなく現在地。個人の工夫を、組織の安全な仕組みへ育てましょう。</p>
+      </div>
+      <div class="growth-layout">
+        <div class="avatar-card">
+          <div class="small text-white-50">YOUR NAVIGATOR</div>
+          <div class="avatar" id="avatar">🥚</div>
+          <h3 id="levelName">レベル1 未活用段階</h3>
+          <p id="levelMessage" class="text-white-50"></p>
+          <div class="level-bar" id="levelBar"></div>
+          <div class="mt-3 fw-bold"><span id="maturityScore">0</span> / 100</div>
+        </div>
+        <div class="panel"><h3 class="h5">リテラシー・レーダー</h3><div id="radarChart" class="radar-wrap" role="img" aria-label="成熟度レーダーチャート"></div></div>
+      </div>
+      <div class="panel mt-4">
+        <h3 class="h5">次の一歩</h3><div id="nextActions"></div>
+        <button class="btn btn-primary mt-3" onclick="go('ending')">ラジオ・フィードバックへ →</button>
+      </div>
+    </section>
+
+    <section class="page" id="page-ending">
+      <div class="section-head">
+        <div><div class="eyebrow">SECTION 06</div><h2>本日のラジオ・フィードバック</h2></div>
+        <p>NotebookLMの音声概要を会議共有に応用する発想にならい、学びを約1分のDJトークに凝縮します。</p>
+      </div>
+      <div class="radio-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span class="on-air"><i></i> ON AIR</span><span class="text-white-50 small">AI NAVIGATOR FM 84.0</span>
+        </div>
+        <h3 class="mt-4">今日の学び・1分ラジオ</h3>
+        <div class="script mt-3" id="radioScript"></div>
+        <div class="d-flex flex-wrap gap-2 mt-4">
+          <button class="btn btn-warning" id="playRadioBtn" onclick="playRadio()">▶ 音声を再生</button>
+          <button class="btn btn-outline-light" onclick="stopRadio()">■ 停止</button>
+          <button class="btn btn-light" onclick="makeRadio()">🔄 スクリプトを再生成</button>
+          <button class="btn btn-outline-light" onclick="copyRadio()">📋 コピー</button>
+          <button class="btn btn-success" onclick="retryChallenge()">↩ 結果を保存して再チャレンジ</button>
+        </div>
+        <div id="radioStatus" class="small text-white-50 mt-2" aria-live="polite">再生ボタンを押すと日本語音声で読み上げます。</div>
+      </div>
+      <div class="panel mt-4">
+        <h3 class="h5">修了メッセージ</h3>
+        <p class="mb-0">生成AIは、先生の専門性を置き換えるものではなく、たたき台づくりや視点拡張を助ける道具です。個人情報を守り、出力を検証し、最後は人が判断する。この航路なら、安心と働き方改革は両立できます。</p>
+      </div>
+    </section>
+
+    <section class="page" id="page-sources">
+      <div class="section-head"><div><div class="eyebrow">REFERENCE</div><h2>根拠・出典</h2></div><p>校内研修で説明しやすいよう、一次資料と補足事例を分けています。</p></div>
+      <div class="panel source-list">
+        <h3 class="h5">基準資料</h3>
+        <p><a href="https://www.mext.go.jp/content/20241226-mxt_shuukyo02-000030823_001.pdf" target="_blank" rel="noopener">文部科学省「初等中等教育段階における生成AIの利活用に関するガイドライン Ver.2.0」</a>（令和6年12月26日）</p>
+        <ul>
+          <li>人間中心・最終判断：p.7</li><li>著作権と第35条：p.11–12、p.16、p.19</li>
+          <li>校務利用・情報セキュリティ・個人情報：p.13–16</li><li>代表的リスク：p.28</li>
+        </ul>
+        <h3 class="h5 mt-4">補足事例・研究</h3>
+        <p class="small text-secondary">以下はガイドライン本文の掲載事例ではありません。本文の原則を具体的に考えるための補助教材です。</p>
+        <ul>
+          <li><a href="https://www.nature.com/articles/d41586-025-04091-0" target="_blank" rel="noopener">Nature：ケルン大学研究者のAIサービス上のデータ消失事例</a></li>
+          <li><a href="https://www.washingtonpost.com/technology/2023/05/18/texas-professor-threatened-fail-class-chatgpt-cheating/" target="_blank" rel="noopener">Washington Post：Texas A&amp;M University–Commerceの誤判定事例</a></li>
+          <li><a href="https://doi.org/10.1016/j.patter.2023.100779" target="_blank" rel="noopener">Patterns：AI検出器の非ネイティブ英語話者に対するバイアス研究</a></li>
+        </ul>
+        <div class="alert alert-warning small mb-0">法的判断は個別事情で異なります。本アプリは法的助言ではありません。公開や外部提供の前に、校内規程を確認し、管理職・学校法人の担当者・都道府県の私学担当部署、必要に応じて著作権や個人情報保護の専門窓口へ相談してください。</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const sections=[
+  ['home','スタート','⌂'],['quiz','診断クイズ','01'],['detector','AI検出','02'],
+  ['prompt','プロンプト','03'],['story','ヒヤリハット','04'],['maturity','成熟度','05'],
+  ['ending','ラジオ','06'],['sources','根拠・出典','↗']
+];
+const legacyQuiz=[
+ {q:'生成AIが作った保護者向け通知文。最終確認として最も適切なのは？',a:2,c:['AIが自信ありと答えればそのまま配布する','同僚には見せず、文体だけ整える','教職員が事実・表現・権利を確認し、自ら責任を持って完成させる','利用したAIサービスに責任を委ねる','多数決でAI案を採用する'],e:'生成AIの出力は「参考の一つ」であり、最適解とは限りません。最後は人間が判断し、成果物に責任を持つことが人間中心の原則です。'},
+ {q:'一般向け生成AIに入力してはいけない情報として、最も明確なものは？',a:1,c:['公開済みの学校行事日程','氏名と紐づく成績・所見データ','架空の学級名簿','一般公開された文科省資料のURL','匿名化した一般的な授業テーマ'],e:'適切なセキュリティ対策が講じられた契約環境等を除き、成績情報等の重要性の高い情報をプロンプトへ入力してはいけません。氏名を消すだけで再識別できる場合もあるため注意します。'},
+ {q:'未公表の職員会議資料をAIで要約したい。最初に行うことは？',a:3,c:['個人アカウントにアップロードする','PDFを画像化すれば安全に処理できる','AIに「秘密にして」と指示する','自治体の方針・情報区分・許可された環境かを確認する','要約後に元ファイルを削除する'],e:'外部サービスは教育委員会の方針、セキュリティポリシー、管理者の指示に従って利用します。「AIに秘密と指示」「画像化」は安全対策にはなりません。'},
+ {q:'授業中、教材として既存作品に類似するAI画像を教室内で提示する場合の考え方は？',a:0,c:['授業の過程なら第35条が適用され得るが、必要な範囲か等を確認する','AI生成なら著作権は常に無関係','必ず著作者の許諾が必要','学校なら用途を問わず自由','出典を書けば必ず自由'],e:'授業の過程における必要な利用は著作権法第35条が適用され得ます。ただし無制限ではなく、必要性や著作権者の利益を不当に害さないこと等、要件の確認が必要です。'},
+ {q:'授業で使った「有名キャラクター風」のAI画像を学校HPにも掲載したい。適切なのは？',a:4,c:['授業で一度使えばHP掲載も第35条の範囲','非営利なので自由','小さく掲載すれば自由','AI生成であると書けば自由','類似性と依拠性、利用規約等を確認し、必要なら許諾・差替えを行う'],e:'学校HPやSNSへの掲載は授業目的の範囲外で、第35条が適用されない可能性があります。生成物を公開する前に既存著作物との類似性を確認し、個別判断を行います。'},
+ {q:'AIが示した歴史上の出来事と出典が、もっともらしい。どうする？',a:2,c:['文章が自然なので採用する','同じAIに再質問して一致すれば採用する','教科書・公的資料・原典など独立した信頼できる情報で検証する','出典の数だけ数える','「AIによる」と注記して未確認で使う'],e:'ハルシネーションは完全に防ぐことが困難です。同じAIへの再質問だけでは独立検証になりません。質が担保された教材や公的資料、原典などでファクトチェックします。'},
+ {q:'AI検出器が生徒レポートを「AI生成率95%」と表示した。適切な対応は？',a:1,c:['直ちに不合格にする','単独で不正の証拠とせず、作成過程や本人への確認など複数の根拠で判断する','数値を本人に見せず処分する','別の検出器が同意すれば自動処分する','クラス全員を再試験にする'],e:'AIによる数値や判定だけで学習評価・不正認定を行わず、教師が判断します。作成履歴、口頭確認、授業中の成果などを組み合わせ、公平性と説明責任を確保します。'},
+ {q:'AIサービスを教材保管庫のように使う際、最も重要な備えは？',a:3,c:['有料プランならバックアップ不要','会話タイトルを細かくする','毎日AIに保存確認をさせる','重要データは校内の承認済み環境にも保存し、変更前に仕様と影響を確認する','ブラウザを閉じなければ消えない'],e:'生成AIサービスを唯一の保管場所にしないことが重要です。ケルン大学の外部事例は、設定変更で長期の作業データを失う危険を示しました。重要データは承認済み環境へ別保存します。'},
+ {q:'児童生徒に生成AIを使わせる際、利用条件について正しいのは？',a:0,c:['年齢制限・約款・自治体方針を確認し、必要に応じ保護者の理解を得て教師が指導する','学校の端末なら年齢制限は無関係','児童生徒の自己責任で使わせる','無料サービスなら保護者説明は不要','検索エンジン内蔵型は確認不要'],e:'サービスの年齢制限や約款を確認し、リスクが許容できるか校長・担当教師が確認します。必要に応じ保護者の理解を得て、教師の適切な指導監督下で利用します。'},
+ {q:'働き方改革につながる、望ましい校務利用は？',a:4,c:['児童生徒の評価をAIだけで確定する','個人情報入り面談記録を私用AIで要約する','AIの文書を無確認で大量配布する','教師と児童生徒の対話をAIに置き換える','許可された環境で文書のたたき台を作り、人が確認・改善する'],e:'授業準備や各種文書の「たたき台」は有用な活用例です。安全な環境と人の確認を前提に、校務の効率化・質の向上を働き方改革へつなげます。'}
+];
+const quiz=[
+ {q:'生成AIが作った保護者向け通知文を配布する前の対応は？',c:[
+ ['日程・金額・固有名詞を原資料と照合し、表現・権利・個人情報も人が確認する',100,'最終判断と責任を人が持つ、最も適切な対応です。'],
+ ['日程と金額は照合するが、文章表現はAIを信頼する',80,'かなり適切です。誤解や偏見を生む表現、権利、個人情報も確認しましょう。'],
+ ['同僚にざっと読んでもらい、違和感がなければ配布する',50,'人の目は入りましたが、印象確認ではなく原資料との照合項目を決めましょう。'],
+ ['AIに再度「誤りはないか」と尋ね、一致すれば配布する',30,'再質問は補助にすぎません。同じAIではなく独立した資料で検証します。'],
+ ['AIが自信ありと答えたのでそのまま配布する',0,'自信らしい表現は正確性の証拠ではありません。']]},
+ {q:'成績データをAIで分析したい。どう進める？',c:[
+ ['自治体方針と情報区分を確認し、許可された契約環境で必要最小限だけ扱う',100,'許可・環境・データ最小化がそろっています。'],
+ ['許可された環境だが、分析しやすいよう全項目を入力する',80,'環境確認は適切です。目的に不要な項目は除きましょう。'],
+ ['氏名だけ削除して一般向けAIへ入力する',50,'再識別の可能性があります。匿名化だけでなく利用環境の許可確認が必要です。'],
+ ['学習利用をオフにして一般向けAIへ入力する',30,'オプトアウトだけで学校の規程を満たすとは限りません。'],
+ ['氏名と成績を私用アカウントへ入力する',0,'重要性の高い情報を無許可の環境へ入力してはいけません。']]},
+ {q:'未公表の職員会議資料を要約したい。最初の対応は？',c:[
+ ['情報区分・自治体方針・契約を確認し、許可環境だけで扱う',100,'未公表資料は、便利さより先に情報区分と利用環境を確認します。'],
+ ['管理職へ相談し、機密部分を除いて許可環境で扱う',80,'慎重です。正式な方針と手順まで確認すれば万全です。'],
+ ['個人名を伏字にして無料AIで要約する',50,'伏字だけでは資料全体の機密性を解消できません。'],
+ ['PDFを画像化してからAIへ入れる',30,'形式変更は秘密保持策になりません。'],
+ ['AIへ「秘密にして」と指示して入力する',0,'プロンプト上のお願いは技術的・契約上の保護ではありません。']]},
+ {q:'既存作品に似たAI画像を授業で提示するときは？',c:[
+ ['授業の過程・必要範囲か、第35条の要件と権利者への影響を確認する',100,'「授業なら何でも可」とせず要件を確認できています。'],
+ ['授業内だけで必要最小限に使う',80,'かなり慎重です。類似性と第35条の要件も明示的に確認しましょう。'],
+ ['出典とAI生成であることを表示して使う',50,'透明性は大切ですが、表示だけで権利処理は完了しません。'],
+ ['非営利の学校なので自由に使う',30,'非営利性だけで適法になるわけではありません。'],
+ ['AI生成物には著作権問題がないため、そのまま使用する',0,'既存著作物と類似する生成物は侵害となる可能性があります。']]},
+ {q:'授業で使った「有名キャラクター風」画像を学校HPへ載せたい。どうする？',c:[
+ ['公開を保留し、類似性・規約・権利処理を確認し、必要なら差替えや許諾を行う',100,'HP公開は授業内利用と別に判断する、最も安全な対応です。'],
+ ['オリジナル案へ作り直し、複数人で類似性を確認する',80,'実務的です。規約と権利処理の確認も加えましょう。'],
+ ['「AI生成」と表示し、小さく掲載する',50,'表示やサイズだけで侵害可能性はなくなりません。'],
+ ['非営利の文化祭広報なので掲載する',30,'非営利だけでは第35条の範囲になりません。'],
+ ['授業で使ったので第35条で自由に公開する',0,'授業内利用と公衆送信は別段階です。']]},
+ {q:'AIが示した歴史資料と出典を授業で使いたい。どう確認する？',c:[
+ ['教科書・公的機関・原典など独立した複数資料で内容と出典を確認する',100,'もっともらしさではなく、質の高い資料で検証できています。'],
+ ['公的機関の資料を一つ確認し、重要部分を照合する',80,'かなり適切です。重要な主張は別資料でも確認しましょう。'],
+ ['検索上位の記事と一致するかを見る',50,'検索順位は信頼性を保証しません。情報源の質を評価しましょう。'],
+ ['別の生成AIにも尋ね、一致すれば使う',30,'AI同士が同じ誤情報を返す可能性があります。'],
+ ['自然な文章と実在しそうな出典なので使う',0,'もっともらしさは正確性の証拠ではありません。']]},
+ {q:'AI検出器がレポートを「AI生成率95%」と表示した。どう対応する？',c:[
+ ['断定せず、下書き・編集履歴・授業中の様子・本人説明を合わせて判断する',100,'複数の根拠と本人への説明機会を確保する公正な対応です。'],
+ ['本人と面談し、作成過程を説明してもらって判断する',80,'良い対応です。客観的な履歴も組み合わせましょう。'],
+ ['別の検出器も高ければ、疑いとして面談する',50,'即処分しない点は良いですが、検出器を重ねてもバイアスは残ります。'],
+ ['再提出を命じるが成績処分はしない',30,'数値だけで負担を課すことも不公平になり得ます。'],
+ ['AI使用と断定し不合格にする',0,'検出率だけで不正認定や評価をしてはいけません。']]},
+ {q:'AIサービス内に2年分の教材下書きがある。設定変更前にどうする？',c:[
+ ['承認済み環境へバックアップし、公式仕様・影響・復元可否を確認する',100,'AIサービスを唯一の保管場所にせず、影響も事前確認しています。'],
+ ['完成版だけ別保存し、公式ヘルプを確認する',80,'かなり安全です。下書きや添付にも保存価値がないか確認しましょう。'],
+ ['画面をPDF保存してから変更する',50,'一部は残せますが、添付・構造・編集可能性を失うおそれがあります。'],
+ ['同僚が大丈夫だったので変更する',30,'アカウントや時期で仕様が違う可能性があります。'],
+ ['有料サービスには保存保証があるため、バックアップせず変更する',0,'有料であることは保存保証ではありません。']]},
+ {q:'児童生徒に生成AIを使わせる準備として適切なのは？',c:[
+ ['年齢制限・約款・自治体方針・教育目的を確認し、保護者理解と指導監督を整える',100,'制度・目的・指導を一体で確認できています。'],
+ ['年齢制限と保護者同意を確認し、教師が使い方を説明する',80,'重要点を押さえています。自治体方針と教育目的も確認しましょう。'],
+ ['安全なプロンプト例を示して使わせる',50,'有効な指導ですが、約款や年齢制限の確認も必要です。'],
+ ['学校端末だけに限定して自由に使わせる',30,'端末を限定してもサービス条件や教育上のリスクは残ります。'],
+ ['児童生徒の自己責任で使わせる',0,'教師の適切な指導監督が必要です。']]},
+ {q:'働き方改革につながる校務利用の進め方は？',c:[
+ ['許可環境でたたき台を作り、人が検証し、成果と注意点を校内共有する',100,'安全・効率・組織学習がそろった成熟した活用です。'],
+ ['許可環境でたたき台を作り、人が確認して完成させる',80,'基本を押さえています。知見共有で組織運用へ進みましょう。'],
+ ['個人情報のない簡単な文書だけで試す',50,'安全な第一歩です。確認手順と効果測定を加えましょう。'],
+ ['AI文書は必ず全文を書き直して使う',30,'慎重ですが効率化が小さくなります。確認箇所を整理しましょう。'],
+ ['評価や保護者対応をAIへ任せ、人は承認だけする',0,'人間的な判断が必要な業務をAIへ委ねきることはできません。']]}
+];
+function q5(q,a,b,c,d,e){return {q,c:[[a,100,'必要な確認を組み合わせた最も適切な対応です。'],[b,80,'大筋は適切ですが、もう一つ確認を加えると安全です。'],[c,50,'一部は適切ですが、重要な確認が不足しています。'],[d,30,'配慮は見られますが、主要なリスクを十分に抑えられません。'],[e,0,'ガイドラインの基本原則に反する対応です。']]}}
+const extraQuiz=[
+ q5('AIでテスト問題のたたき台を作るとき、最も適切な進め方は？','学習目標との整合、正答、難易度、権利を教員が確認して修正する','正答と難易度を教員が確認し、出典確認は必要な設問に絞る','複数のAIに同じ問題を作らせ、多数案を採用する','AI案をそのまま使い、実施後に不備を確認する','問題作成から採点までAIだけで完結させる'),
+ q5('児童の感想文をAIで集約したい。どうする？','許可環境で必要最小限に匿名化し、原文との対応を人が確認する','匿名化して許可環境で集約し、代表例だけ原文確認する','氏名を消して一般向けAIへ全件入力する','短文なら個人特定されないため、そのまま入力する','氏名付きの原文を私用AIへ入力する'),
+ q5('AIが作った通知文に実在しない制度名があった。次回の対策は？','公式資料を指定し、出力後も制度名と内容を原典で照合する','公式資料をプロンプトで示し、制度名を検索で確認する','「正確に」と強調して再生成する','別のAIが同じ制度名を出せば採用する','文章が自然ならそのまま採用する'),
+ q5('児童生徒の作品をAIの改善例として使うには？','利用目的・環境・権利・個人情報を確認し、必要な同意や匿名化を行う','本人名を外し、許可環境で必要部分だけ使う','教室内の作品なので教師が自由に入力する','作品タイトルだけ変えて一般向けAIへ入力する','本人に知らせず全文を公開AIへ入力する'),
+ q5('AI利用を含む宿題を設計するとき重要なのは？','利用条件を明示し、思考過程や根拠も評価できる課題にする','利用可否と引用方法を示し、完成物を中心に評価する','AI利用は自由とだけ伝え、提出物を比較する','検出器でAI利用者を見つける前提で出題する','AIの生成物をそのまま提出させる'),
+ q5('校内でAI活用を広げる順序として適切なのは？','小規模試行、リスク確認、成果共有、ルール更新を繰り返す','許可用途を限定して試し、成果が出たら対象を広げる','希望者へ自由に使わせ、後から事例を集める','便利なサービスを先に全員契約し、規程は後で作る','ルールなしで全面導入する'),
+ q5('生成AIの回答に偏見を含む表現があった。どうする？','採用せず、背景のバイアスを検討し、別資料と当事者視点で修正する','採用せず、表現を中立的に直して同僚確認する','不快な語だけ置き換えて使用する','AIの一般的見解として注記して使用する','AIは大量の資料を学習しているため、客観的な回答として採用する'),
+ q5('校外学習の行程案をAIで作る場合は？','公式の営業時間・交通・安全情報を確認し、担当者が実行可能性を判断する','交通と営業時間を公式サイトで確認し、現地下見は必要に応じて行う','地図サービスとAI回答が一致すれば採用する','AIへ最新情報か確認して採用する','AI案を予約なしでそのまま実施する'),
+ q5('AIサービスの利用規約が更新された。対応は？','変更点、データ利用、対象年齢、出力権利を確認し校内運用を見直す','データ利用と年齢条件を確認し、管理者へ共有する','重要そうな見出しだけ読み、従来運用を続ける','同僚が使えていれば問題ないと判断する','規約は事業者の問題なので確認しない'),
+ q5('保護者からAI利用について質問された。説明は？','目的、利用範囲、入力しない情報、人の確認、問い合わせ先を具体的に示す','目的と安全対策を説明し、詳細は校内規程を案内する','便利さを中心に説明し、リスクは聞かれたら答える','AIを使うことだけ伝え、仕組みは説明しない','学校の判断なので説明不要とする'),
+ q5('AIが作ったルーブリックで評価する場合は？','教員が観点と基準を学習目標に照らして修正し、実際の評価を判断する','教員が観点を確認し、境界事例だけ人が再評価する','AIの基準を複数回生成し、平均的な案を使う','評価後に苦情があれば人が見直す','AIの点数をそのまま成績にする'),
+ q5('音声生成AIで教材を作るときの配慮は？','内容、声の権利、誤認、利用規約、アクセシビリティを確認する','内容と利用規約を確認し、AI音声であることを示す','AI音声と表示すれば自由に使える','有名人に似た声でも教育目的なら使える','本人そっくりの声を無断生成して公開する'),
+ q5('AIとの対話履歴を校内研修で共有したい。どうする？','個人情報・機密・権利を点検し、必要部分だけ匿名化して共有する','氏名等を削除し、許可された共有先へ掲載する','画面を一部ぼかして全履歴を共有する','校内限定なら未確認で共有する','私用SNSへリンクを投稿する'),
+ q5('小学生にAIの誤りを体験させる授業では？','発達段階に合わせ、教師管理下で誤りを検証する活動にする','教師が生成例を用意し、教科書と比較させる','自由入力させ、誤りを見つけた児童だけ評価する','誤回答を面白い例として見せるだけにする','年齢条件を確認せず各自で登録させる'),
+ q5('AIで議事録案を作成するときは？','録音・入力の許可、機密性、発言内容を確認し、人が議事録を確定する','許可環境で要約し、決定事項だけ出席者が確認する','個人名を消した録音を一般AIへ入れる','AI要約をそのまま正式記録にする','無断録音を私用AIで処理する'),
+ q5('生徒がAI利用を申告したレポートの評価は？','課題ルールに沿い、AI利用過程と本人の思考・成果を評価する','申告を尊重し、口頭説明を加えて評価する','AIを使った部分を一律減点する','検出率と申告内容を比較して採点する','AI利用だけを理由に不合格にする'),
+ q5('無料AIと学校契約AIの選択では？','機能だけでなくデータ取扱い、管理、年齢、契約条件を比較する','学校契約AIを優先し、用途ごとに機能も確認する','回答精度が高い方だけを選ぶ','利用者数が多い無料AIを選ぶ','規約を見ず無料AIを使う'),
+ q5('AI生成画像を学校だよりへ使う前に？','類似性、権利、規約、個人情報、内容の適切性を確認する','類似画像検索と規約確認を行い、編集して使う','AI生成の表示だけを付けて使う','無料画像と同じ扱いで使う','有名作品に似ていてもそのまま掲載する'),
+ q5('AI活用で生まれた時間をどう捉える？','児童生徒との対話や授業改善へ振り向け、質と安全も検証する','校務時間の削減効果を測り、教育活動へ再配分する','処理件数だけを増やす','AI利用時間そのものを成果とする','人による確認を削って速度だけを追う'),
+ q5('AI出力を引用して研修資料へ載せる場合は？','内容を検証し、利用規約・引用方法・第三者の権利を確認する','AI利用を明示し、重要箇所を公的資料で確認する','AI名だけ書けば十分とする','出力は著作物でないと決めつける','未確認の出力を自分の見解として掲載する')
+];
+const quizBank=[...quiz,...extraQuiz];
+const shuffle=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b};
+function disguiseChoiceLengths(choices){
+ const tails={
+  80:'。実務上の負担を抑えながら、主要な事故を防ぐ',
+  50:'。校内で複数人が確認し、単独判断による見落としを減らす',
+  30:'。迅速な対応が必要な場合でも、最低限の確認として機能する',
+  0:'。学校での教育目的かつ非営利の利用には、この例外が適用される'
+ };
+ const cloned=choices.map(c=>[...c]);
+ const correct=cloned.find(c=>c[1]===100);
+ [80,50].forEach(p=>{const c=cloned.find(x=>x[1]===p);if(c&&c[0].length<=correct[0].length+8)c[0]+=tails[p]});
+ return shuffle(cloned);
+}
+let activeQuiz=shuffle(quizBank).slice(0,10).map(x=>({...x,c:disguiseChoiceLengths(x.c)}));
+const detectorCases=[
+ {label:'定型的なまとめ',text:'環境問題は私たち全員に関係する重要な課題です。一人一人ができることを考え、協力して行動する必要があります。',truth:'human',note:'日本語学習中の生徒が定型表現を使って書いた想定です。予測しやすい表現は誤検出されることがあります。'},
+ {label:'情景描写',text:'校庭の銀杏は朝の光を薄い金色に砕き、登校する子どもたちの足音を静かに聞いていた。',truth:'ai',note:'AI生成という想定ですが、人間にも書ける表現です。流暢さだけでは断定できません。'},
+ {label:'地域調査の考察',text:'聞き取りの内容を地図に重ねると、数字だけでは見えなかった住民の不安が分かった。データと対話の両方が必要だと思う。',truth:'human',note:'人間が推敲した想定です。整った文章であることはAI使用の証拠になりません。'},
+ {label:'読書感想',text:'主人公の気持ちは最初と最後で大きく変化した。その理由は、友人との対話を通して自分の弱さを受け入れたことにある。',truth:'ai',note:'AI生成の想定です。ただし、論理的な構成だけで出自を判定できません。'},
+ {label:'実験レポート',text:'予想と違って温度はあまり上がらなかった。たぶん、ビーカーを机に置いたまま測ったので、周りに熱が逃げたのだと思う。',truth:'human',note:'生徒が実験中の経験を基に書いた想定です。具体性も確実な判定材料ではありません。'},
+ {label:'校則について',text:'校則には安全を守る役割がある一方、時代や生徒の実情に合わせて見直す視点も必要である。対話を重ねて納得できる規則を作りたい。',truth:'ai',note:'AI生成の想定です。均衡の取れた主張も人間・AIのどちらにも作れます。'},
+ {label:'短い振り返り',text:'今日は話し合いであまり発言できなかった。でも、友達の意見を聞いて、自分が決めつけていたことに気づいた。次は質問したい。',truth:'human',note:'人間が書いた想定です。短さや素朴さも出自を保証しません。'},
+ {label:'防災学習',text:'災害への備えは物資の準備だけではない。家族との連絡方法や避難場所を事前に確認し、地域で助け合える関係を築くことが重要だ。',truth:'ai',note:'AI生成の想定です。模範的な内容だからAIとは限らず、逆も同様です。'},
+ {label:'歴史の考察',text:'資料Aは政府側の記録なので、書かれていない人々の経験もあると思う。別の立場の資料と比べないと、出来事の全体は分からない。',truth:'human',note:'人間が授業で資料を比較して書いた想定です。批判的な視点も判定根拠にはなりません。'},
+ {label:'文化祭の紹介',text:'今年の文化祭では、各クラスが創意工夫を凝らした展示や発表を行います。皆様のご来場を心よりお待ちしております。',truth:'human',note:'人間が定型句を用いて書いた想定です。定型文は検出器が誤判定しやすい領域です。'},
+ {label:'科学解説',text:'植物が光の方向へ伸びる現象は光屈性と呼ばれる。これは成長に関わる物質の分布が変化し、茎の両側で伸び方に差が生じるためである。',truth:'ai',note:'AI生成の想定です。事実説明の文体だけでは人間の教科書要約と区別できません。'},
+ {label:'部活動日誌',text:'後半になると声が出なくなり、守備の確認も遅れた。明日は疲れたときほど短い言葉で声を掛け合うことを意識する。',truth:'human',note:'人間の活動経験を基にした想定です。ただしAIにも似た文章は生成できます。'},
+ {label:'進路について',text:'将来の職業を一つに決めることより、興味のあることを試しながら自分の得意な点を知ることが大切だと思う。',truth:'ai',note:'AI生成の想定です。一般的な表現だからといって断定はできません。'},
+ {label:'修学旅行の記録',text:'班で道を間違えたとき、私は焦って地図ばかり見ていた。地元の方に尋ねた友達のおかげで、予定より五分遅れただけで着けた。',truth:'human',note:'人間の体験記という想定です。固有の細部もAIで作れるため、文章単独では判定不能です。'},
+ {label:'情報モラル',text:'情報を発信するときは、内容が正しいかだけでなく、誰かを傷つけないか、個人が特定されないかを考える必要がある。',truth:'ai',note:'AI生成の想定です。教育的に整った文体も決定的な証拠ではありません。'}
+];
+const detectorExpansions=[
+ '学校では節電やごみの分別を続けることが大切です。小さな取組でも、みんなが毎日続ければ大きな変化につながると私は考えました。',
+ '葉の先に残った雨粒は小さな鏡のように空を映している。いつもの校庭なのに、その朝だけは新しい場所へ来たように感じられた。',
+ '特に商店街の方が話した「数字が減っても暮らしは続く」という言葉が心に残った。調査結果を伝えるときも、その背景を忘れたくない。',
+ 'この変化は物語全体の主題である「自己受容」を象徴している。したがって、結末の沈黙は敗北ではなく、新しい出発を意味すると解釈できる。',
+ '次に実験するときは、机との間に断熱材を置き、一分ごとの温度を同じ位置で測りたい。条件をそろえれば、予想との差の理由を確かめられる。',
+ '文部科学省の2024年調査では、全国の中学生の87.3%が校則改定を希望し、改定校では遅刻が42%減少したと報告されている。',
+ '発言の回数だけを気にしていたけれど、相手の意見を聞いて問いを返すことも話し合いへの参加だと分かった。次回は一度は質問をする。',
+ '日本では1923年の関東大震災以降、すべての自治体に三日分の食料備蓄が法律で義務付けられ、現在の達成率は全国一律100%である。',
+ '同じ出来事でも、記録した人の立場によって強調される点が違う。資料が作られた目的と時期も確かめ、書かれていない声を想像したい。',
+ '準備では意見がまとまらないこともありましたが、役割を分担して一つずつ解決しました。当日は展示だけでなく、その過程も見てほしいです。',
+ 'オーキシンは光が当たる側へ集まり、その側の細胞を縮ませる。実験では照度を2倍にすると茎の角度が必ず90度になることが証明されている。',
+ '練習後に三人で場面を振り返ると、合図の言葉が長すぎたことにも気づいた。「右」「戻る」のように短く統一して、次の試合で試したい。',
+ '2030年には日本の職業の94%がAIに置き換わるという国連の確定予測があるため、今のうちに職業を一つ決めることには意味がない。',
+ '予定外の出来事だったが、班の全員がそれぞれできることをした。道を尋ねることも含めて、知らない土地で協力する経験になったと思う。',
+ '総務省の統計では、個人情報を一つ削除するだけで再識別の危険は完全にゼロになる。したがって、氏名を消せば写真や成績も自由に共有できる。'
+];
+const enrichedDetectorCases=detectorCases.map((x,i)=>({...x,text:`${x.text}${detectorExpansions[i]}`}));
+let activeDetectorCases=shuffle(enrichedDetectorCases).slice(0,3);
+const state={quizIndex:0,quizScore:0,quizAnswered:false,detectorIndex:0,detectScore:0,promptScore:0,storyScore:0,storyIndex:0,completed:new Set()};
+let currentAccount='',currentProfile=null;
+let currentTheme='light';
+let pendingQuizChoice=null;
+let pendingDetectorChoice=null;
+let pendingStoryChoice=null;
+let radar;
+function setTheme(mode){
+ currentTheme=mode==='dark'?'dark':'light';
+ document.body.classList.toggle('dark-mode',currentTheme==='dark');
+ document.querySelectorAll('input[name="themeMode"]').forEach(r=>r.checked=r.value===currentTheme);
+ if(radar)drawRadar(radar.values);
+}
+
+function navRender(){
+ document.getElementById('stepNav').innerHTML=sections.map(([id,name,icon])=>`<button class="nav-step ${state.completed.has(id)?'done':''}" data-page="${id}" onclick="enterSection('${id}')"><span class="step-dot">${state.completed.has(id)?'✓':icon}</span><span>${name}</span></button>`).join('');
+ updateOverall();
+}
+function enterSection(id){
+ if(!['home','sources'].includes(id)&&!currentAccount){go('home');toast('最初にアカウント名を入力してください');return}
+ if(['home','maturity','ending','sources'].includes(id)){go(id);return}
+ if(id==='quiz'){
+  state.quizIndex=0;state.quizScore=0;state.quizAnswered=false;
+  activeQuiz=shuffle(quizBank).slice(0,10).map(x=>({...x,c:disguiseChoiceLengths(x.c)}));renderQuiz();
+ }
+ if(id==='detector'){
+  state.detectorIndex=0;state.detectScore=0;activeDetectorCases=shuffle(enrichedDetectorCases).slice(0,3);renderDetector();
+ }
+ if(id==='prompt'){
+  state.promptScore=0;document.getElementById('promptInput').value='';document.getElementById('promptResult').innerHTML='';
+ }
+ if(id==='story'){
+  state.storyIndex=0;state.storyScore=0;activeStories=shuffle(storyBank).slice(0,3).map(s=>({...s,choices:disguiseStoryChoices(s.choices)}));renderStory();
+ }
+ state.completed.delete(id);save();go(id);
+}
+function go(id){
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+ document.getElementById('page-'+id).classList.add('active');
+ document.querySelectorAll('.nav-step').forEach(x=>x.classList.toggle('active',x.dataset.page===id));
+ document.getElementById('sidebar').classList.remove('open');
+ window.scrollTo({top:0,behavior:'smooth'});
+ if(id==='detector') renderDetector();
+ if(id==='story') renderStory();
+ if(id==='maturity') renderMaturity();
+ if(id==='ending') makeRadio();
+ updateOverall();
+}
+function scoreTotal(){
+ const q=state.quizScore*5, d=state.detectScore*5, p=state.promptScore*5, s=state.storyScore/45*30;
+ return Math.round(Math.min(100,q+d+p+s));
+}
+function complete(id){
+ state.completed.add(id);navRender();save();
+}
+function updateOverall(){
+ const done=[...state.completed].filter(x=>!['home','sources'].includes(x)).length;
+ const pct=Math.round(done/6*100);
+ document.getElementById('overallBar').style.width=pct+'%';
+ document.getElementById('sidePercent').textContent=pct+'%';
+ const onHome=document.getElementById('page-home').classList.contains('active');
+ document.getElementById('headerScore').textContent=onHome?0:scoreTotal();
+}
+function renderQuiz(){
+ const x=activeQuiz[state.quizIndex];
+ document.getElementById('quizCount').textContent=`QUESTION ${state.quizIndex+1} / ${activeQuiz.length}`;
+ document.getElementById('quizScore').textContent=`獲得 ${state.quizScore.toFixed(1)} / 10`;
+ document.getElementById('quizBar').style.width=(state.quizIndex/activeQuiz.length*100)+'%';
+ document.getElementById('quizQuestion').textContent=x.q;
+ document.getElementById('quizChoices').innerHTML=x.c.map((c,i)=>`<button class="choice" data-choice="${i}" aria-pressed="false" onclick="selectQuizChoice(${i})"><span class="fw-bold me-2">${String.fromCharCode(65+i)}.</span>${c[0]}</button>`).join('');
+ document.getElementById('quizFeedback').className='feedback';
+ document.getElementById('quizNext').classList.add('d-none');
+ document.getElementById('quizConfirm').classList.add('d-none');
+ pendingQuizChoice=null;state.quizAnswered=false;
+}
+function selectQuizChoice(i){
+ if(state.quizAnswered)return;
+ pendingQuizChoice=i;
+ document.querySelectorAll('#quizChoices .choice').forEach((b,n)=>{
+  const selected=n===i;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',selected?'true':'false');
+ });
+ const confirm=document.getElementById('quizConfirm');
+ confirm.textContent=`選択肢 ${String.fromCharCode(65+i)} で確定してよいですか？`;
+ confirm.classList.remove('d-none');
+}
+function answerQuiz(i){
+ if(state.quizAnswered)return;state.quizAnswered=true;
+ const el=document.querySelector(`#quizChoices .choice[data-choice="${i}"]`);
+ const x=activeQuiz[state.quizIndex],selected=x.c[i],pct=selected[1],ok=pct===100;state.quizScore+=pct/100;
+ [...document.querySelectorAll('#quizChoices .choice')].forEach((b,n)=>{b.disabled=true;if(x.c[n][1]===100)b.classList.add('correct')});
+ if(!ok)el.classList.add('wrong');
+ document.getElementById('quizConfirm').classList.add('d-none');
+ const f=document.getElementById('quizFeedback');f.className=`feedback show score-${pct}`;
+ f.innerHTML=`<strong>この回答の適切度：${pct}%</strong><p class="mb-2">${selected[2]}</p><div class="small"><strong>100%の対応：</strong>${x.c.find(c=>c[1]===100)[0]}</div><small>根拠：文科省ガイドライン Ver.2.0</small>`;
+ const n=document.getElementById('quizNext');n.classList.remove('d-none');n.textContent=state.quizIndex===activeQuiz.length-1?'結果を確定 →':'次の問題へ →';
+ save();
+}
+document.getElementById('quizConfirm').onclick=()=>{if(pendingQuizChoice!==null)answerQuiz(pendingQuizChoice)};
+document.getElementById('quizNext').onclick=()=>{
+ if(state.quizIndex<activeQuiz.length-1){state.quizIndex++;renderQuiz()}else{complete('quiz');go('detector')}
+};
+function renderDetector(){
+ const x=activeDetectorCases[state.detectorIndex];
+ document.getElementById('detectCase').textContent=x.label;document.getElementById('detectText').textContent=x.text;
+ document.getElementById('detectResult').innerHTML='';
+ pendingDetectorChoice=null;
+ document.querySelectorAll('#page-detector .detector-choice').forEach(b=>{b.disabled=false;b.classList.remove('selected');b.setAttribute('aria-pressed','false')});
+ document.getElementById('detectorConfirm').classList.add('d-none');
+}
+function selectDetectorChoice(value){
+ pendingDetectorChoice=value;
+ document.querySelectorAll('#page-detector .detector-choice').forEach(b=>{
+  const selected=b.dataset.detectorChoice===value;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',selected?'true':'false');
+ });
+ const confirm=document.getElementById('detectorConfirm');
+ confirm.textContent=`「${value==='ai'?'AIが生成':'人間が執筆'}」で確定してよいですか？`;
+ confirm.classList.remove('d-none');
+}
+function confirmDetectorChoice(){
+ if(pendingDetectorChoice!==null)judgeText(pendingDetectorChoice);
+}
+const texasLessons=[
+ 'Texas A&M University–Commerceの事例では、教員がChatGPT自身に「この文章を書いたか」と尋ねました。しかし、生成AIには文章の執筆者を照合する機能はなく、自信のある回答も証拠にはなりません。',
+ '同事例では学生の成績や卒業への影響が懸念されましたが、大学は最終的に、この件による不合格者・卒業不可者はいないと説明しました。疑いの段階で不利益を与えない手続が重要です。',
+ 'この事例の教訓は、AIの判定値を単独で処分根拠にしないことです。下書き、編集履歴、授業中の様子、本人説明などを組み合わせ、教員が公平に判断する必要があります。'
+];
+function judgeText(v){
+ const x=activeDetectorCases[state.detectorIndex],ok=v===x.truth;
+ if(ok)state.detectScore++;
+ const simulated=x.truth==='human'?[78,91,67][state.detectorIndex]:[22,73,58][state.detectorIndex];
+ const detectorSaysAI=simulated>=60,detectorCorrect=(detectorSaysAI&&x.truth==='ai')||(!detectorSaysAI&&x.truth==='human');
+ const errorType=detectorCorrect?'この例では偶然一致':(x.truth==='human'?'偽陽性（人間の文章をAI生成と誤判定）':'偽陰性（AI生成文を人間執筆と誤判定）');
+ const suspicious=/87\\.3|42%|100%|94%|必ず90度|完全にゼロ/.test(x.text);
+ document.getElementById('detectResult').innerHTML=`<div class="alert ${ok?'alert-success':'alert-warning'}"><strong>① あなたの判断</strong><br>回答：${v==='ai'?'AIが生成':'人間が執筆'}／教材上の設定：${x.truth==='ai'?'AIが生成':'人間が執筆'}（${ok?'一致':'不一致'}）<br>${x.note}</div>
+ <div class="border rounded-3 p-3 bg-light"><strong>② AI検出器シミュレーション（学習用）</strong><p class="small mb-2">以下は正解や採点結果ではなく、信頼できない検出器が別に出した推測値です。</p><div class="fs-5 fw-bold">AI生成らしさ：${simulated}%</div><div>検出器の結論：「${detectorSaysAI?'AI生成':'人間執筆'}」</div><span class="${detectorCorrect?'text-success':'text-danger'} fw-bold">${errorType}</span>
+ <div class="meter mb-2" aria-label="AI検出器の推測値"><span class="meter-pin" style="left:${simulated}%"></span></div>
+ <div class="position-relative small text-secondary" style="height:44px"><span class="position-absolute start-0">0%<br>人間寄り</span><span class="position-absolute text-center" style="left:60%;transform:translateX(-50%)">60%<br>判定境界</span><span class="position-absolute end-0 text-end">100%<br>AI寄り</span></div>
+ <p class="small mt-3 mb-0">棒の位置は「検出器がどちらに寄せて推測したか」だけを表します。文章がAI生成である確率、あなたの正答率、不正の確実性ではありません。</p></div>
+ ${suspicious?'<div class="alert alert-danger mt-3 mb-0"><strong>ハルシネーション注意：</strong>本文には、もっともらしい誤った数値・制度・因果関係が意図的に含まれています。ただし、誤情報があること自体も「AIが書いた証拠」にはなりません。内容の検証と執筆者判定は別問題です。</div>':''}
+ <p class="small text-secondary mt-3"><strong>実例からの教訓：</strong>${texasLessons[state.detectorIndex]}</p>
+ <button class="btn btn-primary" onclick="nextDetector()">${state.detectorIndex===activeDetectorCases.length-1?'完了 →':'次の文章 →'}</button>`;
+ document.querySelectorAll('#page-detector .btn-outline-primary,#page-detector .btn-outline-success').forEach(b=>b.disabled=true);
+ document.getElementById('detectorConfirm').classList.add('d-none');
+}
+function nextDetector(){
+ document.querySelectorAll('#page-detector .btn-outline-primary,#page-detector .btn-outline-success').forEach(b=>b.disabled=false);
+ if(state.detectorIndex<activeDetectorCases.length-1){state.detectorIndex++;renderDetector()}else{complete('detector');go('prompt')}
+}
+function insertSample(){
+ if(!document.getElementById('promptTask').value)document.getElementById('promptTask').value='trip';
+ setPromptTask();
+ const key=document.getElementById('promptTask').value;
+ document.getElementById('promptInput').value=flawedExamples[key];
+}
+const flawedExamples={
+ trip:'修学旅行のお知らせを書いて。日程や費用は適当に補って、読みやすくして。',
+ festival:'文化祭の案内を他校へ送るので、いい感じの文章にして。有名キャラクターの画像案も付けて。',
+ camp:'部活の合宿について保護者に連絡する文章を書いて。部員名と健康上の注意も一覧にして。',
+ meeting:'個人面談のお知らせを作って。全家庭の希望日時を本文に入れて、なるべく詳しく。',
+ training:'生成AI研修のお知らせを作って。参加者が実在の児童データを使って練習することも書いて。'
+};
+const promptTasks={
+ trip:{brief:'目的：修学旅行の概要と準備を保護者へ伝える。必須：日程、行先、費用、持ち物、説明会、問い合わせ先。',sample:'あなたは中学校3年の学年主任です。修学旅行に関する保護者あて案内文を作成してください。600字以内、丁寧で安心感のある文体、見出しと箇条書きを使用。日程・行先・費用・持ち物・説明会・問い合わせ先を含め、個人情報は入れず、未確定事項は［要確認］と表示してください。'},
+ festival:{brief:'目的：近隣校の生徒会を文化祭へ招待する。必須：日時、会場、企画、入場方法、申込期限、連絡先。',sample:'あなたは高校の生徒会顧問です。近隣校の生徒会へ送る文化祭開催のお知らせを作成してください。500字以内、親しみと礼節のある文体で、開催日時・会場・企画概要・入場方法・申込期限・連絡先を箇条書きで示してください。実在の個人名は使わず、未確定事項は［要確認］としてください。'},
+ camp:{brief:'目的：合宿の趣旨を説明し、保護者へ準備と協力を依頼する。必須：目的、日程、場所、費用、持ち物、健康管理、緊急連絡。',sample:'あなたは中学校の部活動顧問です。合宿実施にあたって保護者へ協力をお願いする文書を作成してください。700字以内、丁寧で不安を減らす文体で、目的・日程・場所・費用・持ち物・健康管理・緊急時対応を見出し付きで整理してください。個人情報は含めず、要確認箇所は［要確認］と表示してください。'},
+ meeting:{brief:'目的：個人面談の希望日時を収集する。必須：実施期間、回答方法、締切、調整方法、注意事項。',sample:'あなたは小学校の学級担任です。個人面談の日程希望調査を保護者へ案内する文書を作成してください。450字以内、簡潔でやわらかな文体で、実施期間・回答方法・締切・日程調整・注意事項を含めてください。児童名は含めず、未確定事項は［要確認］としてください。'},
+ training:{brief:'目的：教職員へ生成AI研修の参加を促す。必須：ねらい、日時、会場、内容、持ち物、申込、個人情報に関する注意。',sample:'あなたは校内研修担当です。教職員向け生成AI研修の開催案内を作成してください。500字以内、前向きな文体で、ねらい・日時・会場・内容・持ち物・申込方法を含め、「実在する児童生徒の個人情報を入力しない」という注意を目立たせてください。未確定事項は［要確認］としてください。'}
+};
+function setPromptTask(fill=false){
+ const data=promptTasks[document.getElementById('promptTask').value];
+ document.getElementById('taskBrief').innerHTML=data?`<strong>今回の課題</strong><br>${data.brief}<br><span class="small">「誤りを含む例」は、役割・条件不足や架空情報、個人情報などの問題を意図的に含みます。問題点を直して診断してください。</span>`:'課題を選ぶと、文書の目的・読み手・必須事項が表示されます。';
+}
+function escapeHtml(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function navigatorPreview(t,role,command,condition){
+ const key=document.getElementById('promptTask').value;
+ const tone=/温か|やわらか/.test(t)?'やわらかな文体':/丁寧|礼節/.test(t)?'丁寧な文体':'標準的な文体';
+ const format=/箇条書き/.test(t)?'箇条書き':'通常の文章';
+ const wants=x=>t.includes(x);
+ const guessed=/適当|補って|推測|おまかせ|いい感じ/.test(t);
+ const instructionItems=t.split(/\n/).map(line=>line.trim().replace(/^[・●\-]\s*/,'')).map(line=>{
+  const match=line.match(/^([^：:；;]{1,30})\s*[：:；;]\s*(.+)$/);
+  return match?{label:match[1].trim(),value:match[2].trim()}:null;
+ }).filter(Boolean);
+ const itemValue=pattern=>instructionItems.find(x=>pattern.test(x.label))?.value||'';
+ const allLabels='日程|日時|行先|費用|持ち物|説明会|問い合わせ先?|会場|企画|入場|申込|連絡先|場所|目的|健康|緊急|期間|回答|締切|調整|注意|内容|個人情報';
+ const extractValue=label=>{
+  const pattern=new RegExp(`${label}(?:先|期限|方法|時対応|管理)?\\s*(?:は|：|:|=)?\\s*([\\s\\S]{1,50}?)(?=、|。|\\n|\\s+(?:${allLabels})(?:先|期限|方法|時対応|管理)?\\s*(?:は|：|:|=)?|$)`);
+  const match=t.match(pattern);return match?escapeHtml(match[1].trim()):'';
+ };
+ const value=(label,fake)=>{
+  if(!wants(label))return null;
+  const quoted=extractValue(label);
+  if(quoted)return `${label}：${quoted}`;
+  return guessed?`${label}：${fake}（AIが推測）`:`［${label}：指定なし］`;
+ };
+ const joinFields=items=>items.filter(Boolean).map(x=>`・${x}`).join('\n');
+ const fields={
+  trip:joinFields([value('日程','7月12日～14日'),value('行先','京都・奈良'),value('費用','35,000円'),value('持ち物','制服・筆記用具'),value('説明会','6月20日 16時'),value('問い合わせ','学年主任')]),
+  festival:joinFields([value('日時','10月5日 9時'),value('会場','本校体育館'),value('企画','舞台発表と展示'),value('入場','受付で生徒証提示'),value('申込','9月20日締切'),value('連絡先','生徒会担当')]),
+  camp:joinFields([value('日程','8月3日～5日'),value('場所','青少年研修センター'),value('費用','18,000円'),value('持ち物','練習着・保険証写し'),value('健康','事前健康調査を実施'),value('緊急','顧問携帯へ連絡')]),
+  meeting:joinFields([value('期間','7月8日～12日'),value('回答','オンラインフォーム'),value('締切','6月28日'),value('調整','希望多数の場合は担任が調整'),value('注意','一家庭15分')]),
+  training:joinFields([value('日時','8月1日 14時'),value('会場','視聴覚室'),value('内容','生成AIの基本と演習'),value('持ち物','校務端末'),value('申込','校内フォーム'),value('個人情報','実在データは入力禁止')])
+ };
+ const openings={
+  trip:'保護者の皆様へ\n\n修学旅行を実施いたします。お子様が安心して参加できるよう、準備へのご協力をお願いいたします。',
+  festival:'近隣校生徒会の皆様へ\n\n本校文化祭を開催いたします。生徒同士の交流の機会として、ぜひご来場ください。',
+  camp:'保護者の皆様へ\n\n部活動の合宿を実施いたします。技術向上とチームづくりを目的として、安全に配慮して活動します。',
+  meeting:'保護者の皆様へ\n\n個人面談を実施いたします。下記の方法で希望日時をご回答ください。',
+  training:'教職員の皆様へ\n\n校内生成AI研修を開催します。校務での活用方法と安全上の注意を確認します。'
+ };
+ const allItemLines=instructionItems.map(x=>`・${escapeHtml(x.label)}：${escapeHtml(x.value)}`).join('\n');
+ let draft;
+ if(key==='festival'&&instructionItems.length){
+  const issueDate=itemValue(/文書発出日|発出日|作成日/);
+  const sender=itemValue(/生徒会長名|差出人|発信者/);
+  const eventDate=itemValue(/文化祭開催日時|開催日時|日時/);
+  const publicMethod=itemValue(/公開方法|入場方法|入場/);
+  const request=itemValue(/お願い|依頼/);
+  const venue=itemValue(/会場|場所/);
+  const recipient=/他校の生徒会長|他校生徒会長/.test(t)?'各校生徒会長　様':'近隣校生徒会　御中';
+  const detailLines=[
+   eventDate?`開催日時　${escapeHtml(eventDate)}`:'',
+   venue?`会　　場　${escapeHtml(venue)}`:'',
+   publicMethod?`公開方法　${escapeHtml(publicMethod)}`:'',
+   request?`お願い　${escapeHtml(request)}`:''
+  ].filter(Boolean).join('\n');
+  draft=`${issueDate?`${escapeHtml(issueDate)}\n`:''}${recipient}\n\n文化祭開催のご案内\n\nこのたび、本校文化祭を下記のとおり開催いたします。生徒会の皆様をはじめ、多くの方にご来場いただければ幸いです。\n\n${detailLines||allItemLines}\n\nご来場を心よりお待ちしております。\n\n［学校名］生徒会${sender?`\n生徒会長　${escapeHtml(sender)}`:''}`;
+ }else{
+  draft=`${openings[key]||'関係者の皆様へ\n\nお知らせいたします。'}${allItemLines?`\n\n${allItemLines}`:(fields[key]?`\n\n${fields[key]}`:'')}\n\nよろしくお願いいたします。`;
+ }
+ const missing=[];
+ if(!role)missing.push('誰の立場で書くかがないため、学校種・担当・責任範囲に合う語調になっていません。');
+ if(!command)missing.push('何を作るかが明確でないため、案内文・依頼文・通知文のどれに仕上げるか判断できません。');
+ if(!condition)missing.push('読み手・文字数・必須項目・未確定情報の扱いがないため、日程などをAIが推測する危険があります。');
+ const required={
+  trip:['日程','行先','費用','持ち物','説明会','問い合わせ'],
+  festival:['日時','会場','企画','入場','申込','連絡先'],
+  camp:['目的','日程','場所','費用','持ち物','健康','緊急'],
+  meeting:['期間','回答','締切','調整','注意'],
+  training:['日時','会場','内容','持ち物','申込','個人情報']
+ };
+ const absent=(required[key]||[]).filter(x=>!wants(x));
+ const taskMissing=absent.length?`入力文にないため、文面へ反映できなかった項目：${absent.join('、')}。`:'必須項目は指定されています。次は各項目の正しい値と参照資料が必要です。';
+ const omitted=fields[key]?'':'指定された具体項目がないため、本文は概要だけになっています。';
+ const guessIssue=guessed?'「AIが推測」と表示された日程・金額等は入力に根拠がなく、そのまま配布できません。':'';
+ const previewNote=guessed?'入力中の「適当に補う」等の指示に従った場合の危険を示すため、根拠のない情報を「AIが推測」と明示しています。':'選択した課題と、入力文に明記された項目だけを反映し、入力にない事実は補っていません。';
+ return `<div class="panel mt-3 bg-light"><h4 class="h6">入力された指示だけで作成した文面</h4><p class="small text-secondary">${previewNote}</p><div class="border rounded-3 bg-white p-3" style="white-space:pre-line">${draft}\n\n［出力形式：${format}／文体：${tone}］</div><h4 class="h6 mt-3">この文面の具体的な不足</h4><ul class="mb-0">${missing.map(x=>`<li>${x}</li>`).join('')}<li>${taskMissing}</li>${omitted?`<li>${omitted}</li>`:''}${guessIssue?`<li>${guessIssue}</li>`:''}<li>［指定なし］を残さないため、正しい資料を与え、不明点は［要確認］と表示するよう指示してください。</li></ul></div>`;
+}
+function diagnosePrompt(){
+ const t=document.getElementById('promptInput').value.trim();
+ if(!t){document.getElementById('promptResult').innerHTML='<div class="alert alert-warning">まずプロンプトを入力してください。</div>';return}
+ const role=/(あなたは|として|専門家|教員|教師|編集者|担当者)/.test(t);
+ const command=/(作成|提案|要約|整理|生成|考え|書いて|してください|挙げて|比較)/.test(t);
+ const condition=/(字以内|対象|向け|トーン|形式|箇条書き|個人情報|要確認|条件|含めず|件)/.test(t);
+ const safety=/(個人情報|匿名|要確認|事実確認|出典|含めず)/.test(t);
+ const count=[role,command,condition].filter(Boolean).length;state.promptScore=Math.max(state.promptScore,count);
+ const titles=['プロンプト・ルーキー','プロンプト・スカウト','プロンプト・ナビゲーター','プロンプト・マスター'];
+ const taskKey=document.getElementById('promptTask').value;
+ const requiredForAdvice={
+  trip:['日程','行先','費用','持ち物','説明会','問い合わせ'],
+  festival:['日時','会場','企画','入場','申込','連絡先'],
+  camp:['目的','日程','場所','費用','持ち物','健康','緊急'],
+  meeting:['期間','回答','締切','調整','注意'],
+  training:['日時','会場','内容','持ち物','申込','個人情報']
+ };
+ const missingFields=(requiredForAdvice[taskKey]||[]).filter(x=>!t.includes(x));
+ const adviceItems=[];
+ if(!role)adviceItems.push('発信者の立場が不明です。「中学校3年の学年主任として」など、責任と視点を指定してください。');
+ if(!command)adviceItems.push('成果物の種類が不明です。「保護者向け案内文を作成」など、作るものを動詞で指定してください。');
+ if(!condition)adviceItems.push('読み手・長さ・形式・文体が不足しています。配布場面に合わせて指定してください。');
+ if(missingFields.length)adviceItems.push(`この文書で未指定の項目は「${missingFields.slice(0,4).join('、')}」です。必要なものだけ正しい値とともに追加してください。`);
+ if(/適当|補って|推測|おまかせ|いい感じ/.test(t))adviceItems.push('「適当に補う」「おまかせ」は架空情報を生みます。不明事項は推測せず［要確認］と表示するよう変更してください。');
+ if(!safety)adviceItems.push('個人情報を含めないことと、未確定情報を［要確認］にすることを明記してください。');
+ if(!/(添付|資料|参照|原典|公式)/.test(t)&&count===3)adviceItems.push('日時・金額などの根拠にする資料を指定し、「資料にない情報は作らない」と加えてください。');
+ if(!/(確認項目|チェック|照合)/.test(t)&&count===3)adviceItems.push('出力後に人が確認する項目を列挙させると、校務での見落としを減らせます。');
+ if(!adviceItems.length)adviceItems.push('必要な要素がそろっています。実際の出力では、固有名詞・日時・金額を原資料と照合してから使用してください。');
+ const advice=`<strong>${count===3?'マスター向けの個別アドバイス':'今回の入力に応じた改善ポイント'}</strong><ul class="mb-0 mt-2">${adviceItems.slice(0,4).map(x=>`<li>${x}</li>`).join('')}</ul>`;
+ const preview=count>=1?navigatorPreview(t,role,command,condition):'';
+ const scoutRetry=count===1?'<button class="btn btn-warning mt-3 me-2" onclick="retryPromptScout()">✏️ 指摘を反映して再チャレンジ</button>':'';
+ document.getElementById('promptResult').innerHTML=`<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><span class="badge-title">🏅 ${titles[count]}</span><strong>${count}/3 要素</strong></div>
+ <div class="diagnosis-grid">
+ ${diag('役割',role,'誰の視点・専門性で答えるかを指定')}
+ ${diag('命令',command,'何をしてほしいかを動詞で明確に')}
+ ${diag('条件',condition,'対象・長さ・形式・トーン等を指定')}
+ </div>
+ ${preview}
+ <div class="alert ${count===3?'alert-success':'alert-warning'} mt-3 mb-0">${advice}</div>
+ ${scoutRetry}
+ <button class="btn btn-primary mt-3" onclick="complete('prompt');enterSection('story')">次へ →</button>`;
+ save();updateOverall();
+}
+function retryPromptScout(){
+ const input=document.getElementById('promptInput');
+ input.focus();
+ input.scrollIntoView({behavior:'smooth',block:'center'});
+ toast('入力文は残しています。下の評価を参考に修正し、もう一度「プロンプトを診断」を押してください。');
+}
+function diag(name,ok,hint){return `<div class="diagnosis-item ${ok?'found':''}"><strong>${ok?'✓':'○'} ${name}</strong><div class="small text-secondary">${ok?'検出できました':hint}</div></div>`}
+const legacyStories=[
+ {icon:'⚙️',title:'設定変更の落とし穴',body:'授業案や申請書の下書きを2年分、AIサービスのプロジェクト内だけに保存しています。「データ使用への同意」をオフにしたくなりました。',choices:[
+  ['すぐにオフへ切り替える',0,'設定変更に伴って保存データが消える仕様だった場合、復元できない危険があります。実際にケルン大学の研究者が、設定変更後に2年分の作業を失ったと報告しました。'],
+  ['重要データを承認済みの保存先へ退避し、仕様と影響を確認してから変更する',15,'ナイス判断です。AIの会話履歴は正式な文書保管庫ではありません。バックアップ、仕様確認、管理者への相談を先に行います。'],
+  ['同僚が大丈夫だったので、そのまま変更する',5,'アカウント種別や時期で仕様は異なります。同僚の経験だけでなく、最新の公式説明と自分の保存状況を確認しましょう。']
+ ]},
+ {icon:'🎨',title:'“○○風”イラストを公開？',body:'文化祭の案内用に、有名キャラクターにかなり似たAI画像ができました。授業でも使ったので、そのまま学校HPへ載せたいと思います。',choices:[
+  ['非営利の学校なので掲載する',0,'非営利であっても自動的に適法とは限りません。HP掲載は公衆送信に当たり、授業目的の第35条がそのまま適用されるとは限りません。'],
+  ['「AI生成」と書いて掲載する',5,'AI生成の明示だけで著作権上の問題が解消するわけではありません。既存著作物との類似性などを確認します。'],
+  ['公開を保留し、類似性を確認。オリジナル表現へ差し替え、必要なら管理者・専門窓口へ相談する',15,'安全な判断です。生成段階と公開・利用段階では適用される権利制限が異なります。公開前チェックを運用に組み込みましょう。']
+ ]}
+];
+const stories=[
+ {icon:'⚙️',title:'設定変更の落とし穴',body:'授業案や申請書の下書きを2年分、AIサービス内だけに保存しています。「データ使用への同意」をオフにしたくなりました。',choices:[
+  ['完全バックアップ後、公式仕様・影響・復元可否を確認して変更する',15,100,'最善です。保存と仕様確認の両方ができています。'],
+  ['完成版だけ別保存し、公式ヘルプを確認して変更する',12,80,'かなり安全です。下書きや添付にも保存価値がないか確認しましょう。'],
+  ['会話画面をPDF保存してから変更する',7.5,50,'一部は残せますが、添付・構造・編集可能性を失うおそれがあります。'],
+  ['同僚が問題なかったので変更する',4.5,30,'アカウントや時期で仕様が違う可能性があります。'],
+  ['有料プランには保存保証があるため、バックアップせずすぐ変更する',0,0,'危険です。AIサービスを唯一の保管場所にしてはいけません。']
+ ]},
+ {icon:'🎨',title:'“○○風”イラストを公開？',body:'有名キャラクターにかなり似たAI画像ができました。授業でも使ったので、そのまま学校HPへ載せたいと思います。',choices:[
+  ['公開を保留し、類似性・規約・権利処理を確認。必要なら差替え・許諾・相談を行う',15,100,'最善です。授業内利用とHP公開を別段階として判断できています。'],
+  ['オリジナル案へ作り直し、複数人で公開前確認する',12,80,'かなり適切です。規約と権利処理も確認しましょう。'],
+  ['小さくし「AI生成」と表示して掲載する',7.5,50,'表示やサイズだけで権利侵害の可能性はなくなりません。'],
+  ['非営利の文化祭広報なので掲載する',4.5,30,'非営利性だけで自由に公開できるわけではありません。'],
+  ['授業で使ったので第35条で自由に掲載する',0,0,'誤りです。HP掲載は公衆送信であり、授業内利用とは別に検討します。']
+ ]}
+];
+function story5(icon,title,body,best,mostly,half,weak,bad){
+ return {icon,title,body,choices:[
+  [best,15,100,'リスク・校内手順・人の確認を組み合わせた最も適切な判断です。'],
+  [mostly,12,80,'かなり適切です。ただし、確認や記録をもう一段加えると安全です。'],
+  [half,7.5,50,'一部のリスクには対応していますが、重要な確認が不足しています。'],
+  [weak,4.5,30,'配慮はありますが、事故を防ぐには不十分です。'],
+  [bad,0,0,'ガイドラインの基本原則から外れる危険な判断です。']
+ ]};
+}
+const extraStories=[
+ story5('📊','成績一覧を要約？','校長から、学年全員の成績傾向を明日までにまとめるよう頼まれました。','情報区分と許可環境を確認し、必要最小限に加工して集計し、人が結果を検証する','許可環境で氏名を除き、集計結果を担当者が確認する','氏名を削除して一般向けAIへ入力する','学年名だけ伏せて私用AIへ入力する','氏名付き成績表をそのまま入力する'),
+ story5('📝','AIが作った会議録','AIの議事録案には、実際には決まっていない事項が「決定」と書かれていました。','録音・メモと照合し、出席者確認を経て人が正式版を確定する','決定事項だけ原記録と照合し、出席者へ確認する','AIへ再要約させて前後を比較する','誤りの一文だけ直して正式版にする','読みやすいのでそのまま配布する'),
+ story5('🔍','検出率98%','生徒の作文を検出器が「AI生成98%」と判定しました。','処分せず、作成履歴・授業中の様子・本人説明を複数の教員で確認する','本人面談と下書き確認をしてから判断する','別の検出器も試し、両方高ければ再提出を求める','成績処分はせず一律に書き直させる','AI使用と断定して不合格にする'),
+ story5('📷','行事写真をAIへ','学校行事の写真から広報文を作りたくなりました。','許可環境と利用目的を確認し、必要な同意・匿名化を行い最小限だけ扱う','人物が特定できない写真を許可環境で使う','顔をぼかして一般向けAIへ入れる','小さな写真なので同意なしで使う','児童の顔と名札が写る写真を私用AIへ入れる'),
+ story5('🎙️','先生そっくりの音声','欠席者向けに、校長そっくりのAI音声で説明を配信する案が出ました。','本人同意、目的、表示、権利、公開範囲を確認し、誤認しない音声へ変更する','本人同意を得てAI音声と明示し、校内限定で使う','声を少し変えてAI音声と表示する','校内限定なので本人へ事後報告する','無断で本人そっくりの音声を公開する'),
+ story5('📚','問題集を丸ごと入力','市販問題集をAIに読み込ませて類題を作りたいと思いました。','契約・著作権・必要範囲を確認し、入力せず自作条件から問題案を作る','必要な論点だけ自分の言葉で指示し、出力を確認する','数ページだけスキャンして入力する','購入済みなので全ページ入力する','問題集全体を公開AIへアップロードする'),
+ story5('💬','保護者相談の返信','深刻な相談メールへの返信をAIに任せる案が出ました。','個人情報を入力せず一般化した文案だけ作り、事情を知る教職員が判断・執筆する','許可環境で匿名化した要点から案を作り、管理職と確認する','氏名を消した本文をAIへ入力して返信案を使う','AI案を少し直してすぐ送る','相談メール全文を私用AIへ入れて自動返信する'),
+ story5('🌐','翻訳したお知らせ','AI翻訳した重要なお知らせを外国籍保護者へ送ります。','内容、日付、制度用語を話者や専門家が確認し、原文も併記する','逆翻訳と複数人確認を行い、問い合わせ先を示す','別のAI翻訳と一致すれば送る','簡単な文なので無確認で送る','AI翻訳だけを原文なしで送る'),
+ story5('🧒','児童が自由登録','授業で便利なので、児童各自に一般向けAIへ登録させる案が出ました。','年齢条件・方針・目的・保護者理解を確認し、教師管理下の方法を選ぶ','学校指定サービスを教師管理下で使う','保護者同意だけ取り自由利用させる','学校端末なら規約確認なしで使わせる','年齢条件を確認せず各自登録させる'),
+ story5('🗂️','会話履歴を共有','便利なAI会話を職員間で共有したくなりました。','個人情報・機密・権利を点検し、必要部分だけ承認済みの場所で共有する','氏名を除き、校内限定の承認済み場所で共有する','画面を一部ぼかして全履歴を共有する','校内チャットなら無確認で貼る','公開リンクを私用SNSへ投稿する'),
+ story5('🏆','コンクール作品','生徒がAI生成文をほぼそのまま作文コンクールへ出したいと言いました。','応募要項を確認し、本人の思考と推敲過程が分かる成果物に作り直す','AI利用を申告し、本人が大幅に推敲して過程を残す','AI文の言葉遣いだけ本人風に直す','AI利用を伏せて少し修正する','AI出力をそのまま本人作品として提出する'),
+ story5('🚍','AIの行程案','AIが校外学習の完璧そうな行程を作りました。','公式情報、予約、安全、移動時間を確認し、必要なら下見して人が決定する','公式サイトと交通情報を確認し、担当者が修正する','地図サービスと一致すれば採用する','AIへ最新か尋ねて採用する','予約確認なしでそのまま実施する'),
+ story5('📣','緊急連絡文','災害時の保護者連絡をAIで急いで作ります。','承認済みテンプレートと公式情報を基に、人が時刻・場所・指示を確認して配信する','AI案を危機管理担当が公式情報と照合する','複数のAI案で共通する内容を配信する','急ぐため日付だけ確認して送る','AI案を無確認で一斉送信する')
+];
+const storyBank=[...stories,...extraStories];
+function disguiseStoryChoices(choices){
+ const cloned=choices.map(c=>[...c]),correct=cloned.find(c=>c[2]===100);
+ const additions={
+  80:'。担当者の確認も入るため、実際の学校運用として十分に慎重である',
+  50:'。作業時間を増やさず、複数の手段で確かめられる現実的な方法である'
+ };
+ [80,50].forEach(p=>{const c=cloned.find(x=>x[2]===p);if(c&&c[0].length<=correct[0].length+8)c[0]+=additions[p]});
+ return shuffle(cloned);
+}
+let activeStories=shuffle(storyBank).slice(0,3).map(s=>({...s,choices:disguiseStoryChoices(s.choices)}));
+function getProfiles(){try{return JSON.parse(localStorage.getItem('aiTeacherProfilesV1'))||{}}catch(e){return {}}}
+function setAccount(){
+ const name=document.getElementById('accountName').value.trim();
+ if(!name){toast('アカウント名を入力してください');return}
+ if(!/^[\p{L}\p{N} _\-]{1,30}$/u.test(name)){toast('アカウント名は、30文字以内の文字・数字・空白・_・-だけを使用してください');return}
+ currentAccount=name;
+ Object.assign(state,{quizIndex:0,quizScore:0,quizAnswered:false,detectorIndex:0,detectScore:0,promptScore:0,storyScore:0,storyIndex:0});
+ state.completed=new Set();
+ const profiles=getProfiles();currentProfile=profiles[name]||null;
+ if(currentProfile?.theme)setTheme(currentProfile.theme);
+ const history=currentProfile?(currentProfile.history?.length?currentProfile.history:[{score:currentProfile.score,savedAt:currentProfile.savedAt}]).filter(x=>x&&Number.isFinite(Number(x.score))):[];
+ const safeName=escapeHtml(name);
+ const historyHtml=history.length?`<div class="mt-2"><strong>過去の点数記録</strong><ul class="mb-0">${history.slice(-5).reverse().map(x=>`<li>${escapeHtml(new Date(x.savedAt).toLocaleString('ja-JP'))}：${Number(x.score)}点 / 100点</li>`).join('')}</ul></div>`:'';
+ document.getElementById('accountStatus').innerHTML=currentProfile
+  ?`<strong>${safeName}</strong> さん。前回スコアは ${Number(currentProfile.score)}点 / 100点です。通常チャレンジ、または前回と同じ問題で復習できます。${historyHtml}`
+  :`<strong>${safeName}</strong> さんの新しいアカウントを用意しました。結果はこの端末内に保存されます。`;
+ document.getElementById('weakChallengeBtn').classList.toggle('d-none',!currentProfile?.challenge);
+ navRender();
+}
+function clearLocalData(){
+ if(!confirm('この端末に保存されたすべてのアカウント名・得点履歴・復習用問題を削除します。よろしいですか？'))return;
+ localStorage.removeItem('aiTeacherProfilesV1');
+ localStorage.removeItem('aiTeacherNavigatorV3');
+ currentAccount='';currentProfile=null;
+ document.getElementById('accountName').value='';
+ document.getElementById('accountStatus').textContent='保存データを削除しました。新しいアカウント名を入力してください。';
+ document.getElementById('weakChallengeBtn').classList.add('d-none');
+ toast('この端末の保存データを削除しました');
+}
+function saveResult(){
+ if(!currentAccount)return;
+ const profiles=getProfiles();
+ const previous=profiles[currentAccount]||{};
+ const history=[...(previous.history||[])];
+ if(!history.length&&Number.isFinite(Number(previous.score))&&previous.savedAt)history.push({score:previous.score,savedAt:previous.savedAt});
+ const now=new Date().toISOString(),score=scoreTotal();
+ const last=history[history.length-1];
+ if(!last||last.score!==score||Date.now()-new Date(last.savedAt).getTime()>30000)history.push({score,savedAt:now});
+ profiles[currentAccount]={
+  name:currentAccount,score,savedAt:now,theme:currentTheme,history:history.slice(-20),
+  details:{quiz:state.quizScore,detector:state.detectScore,prompt:state.promptScore,story:state.storyScore},
+  challenge:{quiz:activeQuiz,detector:activeDetectorCases,stories:activeStories,promptTask:document.getElementById('promptTask').value}
+ };
+ localStorage.setItem('aiTeacherProfilesV1',JSON.stringify(profiles));
+ currentProfile=profiles[currentAccount];
+}
+function startChallenge(){
+ if(!currentAccount){toast('最初にアカウント名を入力してください');document.getElementById('accountName').focus();return}
+ Object.assign(state,{quizIndex:0,quizScore:0,quizAnswered:false,detectorIndex:0,detectScore:0,promptScore:0,storyScore:0,storyIndex:0});
+ state.completed=new Set();
+ activeQuiz=shuffle(quizBank).slice(0,10).map(x=>({...x,c:disguiseChoiceLengths(x.c)}));
+ activeDetectorCases=shuffle(enrichedDetectorCases).slice(0,3);
+ activeStories=shuffle(storyBank).slice(0,3).map(s=>({...s,choices:disguiseStoryChoices(s.choices)}));
+ renderQuiz();navRender();save();go('quiz');
+}
+function startWeakChallenge(){
+ if(!currentProfile?.challenge){toast('復習できる前回結果がありません');return}
+ Object.assign(state,{quizIndex:0,quizScore:0,quizAnswered:false,detectorIndex:0,detectScore:0,promptScore:0,storyScore:0,storyIndex:0});
+ state.completed=new Set();
+ const cleanText=x=>escapeHtml(String(x??''));
+ activeQuiz=(Array.isArray(currentProfile.challenge.quiz)?currentProfile.challenge.quiz:[]).slice(0,10).map(q=>({
+  q:cleanText(q.q),c:(Array.isArray(q.c)?q.c:[]).slice(0,5).map(c=>[cleanText(c[0]),Number(c[1])||0,cleanText(c[2])])
+ }));
+ activeDetectorCases=(Array.isArray(currentProfile.challenge.detector)?currentProfile.challenge.detector:[]).slice(0,3).map(x=>({
+  label:cleanText(x.label),text:cleanText(x.text),truth:x.truth==='ai'?'ai':'human',note:cleanText(x.note)
+ }));
+ activeStories=(Array.isArray(currentProfile.challenge.stories)?currentProfile.challenge.stories:[]).slice(0,3).map(s=>({
+  icon:cleanText(s.icon),title:cleanText(s.title),body:cleanText(s.body),choices:(Array.isArray(s.choices)?s.choices:[]).slice(0,5).map(c=>[cleanText(c[0]),Number(c[1])||0,Number(c[2])||0,cleanText(c[3])])
+ }));
+ if(activeQuiz.length!==10||activeDetectorCases.length!==3||activeStories.length!==3){toast('保存された復習データを読み込めませんでした。通常チャレンジを開始します。');startChallenge();return}
+ document.getElementById('promptTask').value=currentProfile.challenge.promptTask||'';
+ setPromptTask();
+ renderQuiz();navRender();save();go('quiz');
+}
+function renderStory(){
+ const s=activeStories[state.storyIndex];
+ pendingStoryChoice=null;
+ document.getElementById('storyStage').innerHTML=`<div class="story-icon">${s.icon}</div><div class="small text-secondary fw-bold">SCENARIO ${state.storyIndex+1} / ${activeStories.length}</div><h3>${s.title}</h3><p class="scenario-text">${s.body}</p><div>${s.choices.map((c,i)=>`<button class="story-choice w-100" data-story-choice="${i}" aria-pressed="false" onclick="selectStoryChoice(${i})">${c[0]} →</button>`).join('')}</div><div class="text-end mt-3"><button class="btn btn-outline-primary d-none" id="storyConfirm" onclick="confirmStoryChoice()">この選択で確定</button></div>`;
+}
+function selectStoryChoice(i){
+ pendingStoryChoice=i;
+ document.querySelectorAll('#storyStage .story-choice').forEach((b,n)=>{
+  const selected=n===i;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',selected?'true':'false');
+ });
+ const confirm=document.getElementById('storyConfirm');
+ confirm.textContent=`選択肢 ${String.fromCharCode(65+i)} で確定してよいですか？`;
+ confirm.classList.remove('d-none');
+}
+function confirmStoryChoice(){
+ if(pendingStoryChoice!==null)chooseStory(pendingStoryChoice);
+}
+function chooseStory(i){
+ const s=activeStories[state.storyIndex],c=s.choices[i];state.storyScore+=c[1];
+ document.getElementById('storyStage').innerHTML=`<div class="story-icon">${c[2]>=80?'🛡️':'⚠️'}</div><h3>この判断の適切度：${c[2]}%</h3><div class="alert-card"><strong>選択に応じたアドバイス</strong><p class="mb-0 mt-2">${c[3]}</p></div><div class="small mt-3"><strong>100%の対応：</strong>${s.choices.find(x=>x[2]===100)[0]}</div><p class="small text-secondary mt-3">※外部事例はガイドラインの原則を具体的に考える補助教材です。</p><button class="btn btn-primary" onclick="nextStory()">${state.storyIndex===activeStories.length-1?'成熟度を見る →':'次のシナリオ →'}</button>`;
+ save();updateOverall();
+}
+function nextStory(){if(state.storyIndex<activeStories.length-1){state.storyIndex++;renderStory()}else{complete('story');go('maturity')}}
+function getLevel(score){
+ if(score>=80)return {lv:4,av:'🧑‍🚀',name:'レベル4 組織運用段階',msg:'共通ルールと知見共有で、学校全体を安全に前進させる段階です。'};
+ if(score>=60)return {lv:3,av:'🧭',name:'レベル3 ルール整備段階',msg:'個人の実践を、再現できる校内ルールへ育てる段階です。'};
+ if(score>=35)return {lv:2,av:'🐣',name:'レベル2 限定導入段階（個人利用）',msg:'小さく安全に試し、検証の型を身につける段階です。'};
+ return {lv:1,av:'🥚',name:'レベル1 未活用段階',msg:'まずは個人情報を含まない「たたき台」づくりから始めましょう。'};
+}
+function drawRadar(values){
+ const labels=['基礎理解','公平な評価','プロンプト','安全管理','組織活用'];
+ const cx=180,cy=175,radius=105;
+ const point=(r,i)=>{const a=(-90+i*72)*Math.PI/180;return [cx+Math.cos(a)*r,cy+Math.sin(a)*r]};
+ const polygon=r=>labels.map((_,i)=>point(r,i).map(n=>n.toFixed(1)).join(',')).join(' ');
+ const grid=currentTheme==='dark'?'#52677f':'#c8d4e1';
+ const text=currentTheme==='dark'?'#f1f6fb':'#243b53';
+ const fill=currentTheme==='dark'?'rgba(46,196,182,.30)':'rgba(46,196,182,.20)';
+ const stroke=currentTheme==='dark'?'#6db4ff':'#1677ff';
+ const rings=[.2,.4,.6,.8,1].map(n=>`<polygon points="${polygon(radius*n)}" fill="none" stroke="${grid}" stroke-width="1"/>`).join('');
+ const axes=labels.map((_,i)=>{const [x,y]=point(radius,i);return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="${grid}" stroke-width="1"/>`}).join('');
+ const dataPoints=values.map((v,i)=>point(radius*Math.max(0,Math.min(100,v))/100,i));
+ const dataPolygon=dataPoints.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ');
+ const dots=dataPoints.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4" fill="${currentTheme==='dark'?'#f6c453':'#102a43'}"/>`).join('');
+ const texts=labels.map((label,i)=>{const [x,y]=point(radius+38,i);const anchor=x<cx-10?'end':x>cx+10?'start':'middle';return `<text x="${x}" y="${y}" text-anchor="${anchor}" dominant-baseline="middle" fill="${text}" font-size="13" font-weight="700">${label}</text>`}).join('');
+ document.getElementById('radarChart').innerHTML=`<svg viewBox="0 0 360 350" aria-hidden="true">${rings}${axes}<polygon points="${dataPolygon}" fill="${fill}" stroke="${stroke}" stroke-width="3"/>${dots}${texts}</svg>`;
+ document.getElementById('radarChart').setAttribute('aria-label',labels.map((x,i)=>`${x}${Math.round(values[i])}点`).join('、'));
+ radar={values:[...values]};
+}
+function renderMaturity(){
+ const score=scoreTotal(),l=getLevel(score);
+ document.getElementById('avatar').textContent=l.av;document.getElementById('levelName').textContent=l.name;
+ document.getElementById('levelMessage').textContent=l.msg;document.getElementById('maturityScore').textContent=score;
+ document.getElementById('levelBar').innerHTML=[1,2,3,4].map(x=>`<span class="${x<=l.lv?'on':''}"></span>`).join('');
+ const vals=[Math.min(100,state.quizScore*10),Math.min(100,state.detectScore*33),Math.min(100,state.promptScore*33),Math.min(100,state.storyScore/45*100),Math.min(100,score+10)];
+ const actions=[];
+ if(vals[0]<70)actions.push('文部科学省「初等中等教育段階における生成 AI の利活用に関するガイドライン」p.24の校務利用チェック項目を、校内の利用ルールと照合する。');
+ if(vals[1]<70)actions.push('AI検出率を単独の証拠にせず、作成過程を見取る評価方法を決める。');
+ if(vals[2]<70)actions.push('「役割・命令・条件・安全」の型を、個人情報を含まない文書で試す。');
+ if(vals[3]<70)actions.push('重要データの保存先と、学校HP公開前の確認フローを見直す。');
+ if(!actions.length)actions.push('成功例とヒヤリハットを校内で共有し、利用ルールを定期更新する。');
+ document.getElementById('nextActions').innerHTML='<ul class="mb-0">'+actions.slice(0,3).map(a=>`<li>${a}</li>`).join('')+'</ul>';
+ drawRadar(vals);
+ complete('maturity');
+}
+let radioVariant=-1;
+function makeRadio(){
+ stopRadio();
+ const score=scoreTotal(),l=getLevel(score),weak=state.quizScore<7?'個人情報・著作権・最終確認の3点を、もう一度チェックリストで確かめましょう。':'基本ルールはしっかりキャッチできています。';
+ const scripts=[
+`${currentAccount||'受講者'}さん、お疲れさまです。「今日の学び・1分ラジオ」の時間です。
+今日のキーワードは「AIを怖がらず、AIに任せきらない」。ナビスコアは${score}点、現在地は${l.name}です。
+${weak}
+AIの文章は、あくまでたたき台。成績や個人情報は許可のない環境に入れず、学校ホームページへの公開前には著作権も確認。そして、検出器の数字だけで子どもを判断しない。
+明日は、個人情報を含まないお便りの下書きから、小さく試してみませんか。最後に確かめ、決めるのは私たち人間です。それでは、安全運転で、校務を少し軽やかに。`,
+`${currentAccount||'受講者'}さん、お疲れさまです。「今日の学び・1分ラジオ」です。
+あなたの到達点は${l.name}、スコアは${score}点。今日持ち帰る合言葉は「入力前・公開前・判断前」です。
+入力前には個人情報、公開前には著作権、判断前には事実と公平性を確認。生成AIは答えそのものではなく、考えるための副操縦士です。
+まずは安全な文書のたたき台で5分を生み出し、その5分を子どもと向き合う時間へ。人間中心のAI活用で、明日の学校を少しずつアップデートしていきましょう。`
+ ];
+ radioVariant=(radioVariant+1)%scripts.length;
+ document.getElementById('radioScript').textContent=scripts[radioVariant];
+ complete('ending');saveResult();
+}
+let radioUtterance=null;
+function playRadio(){
+ const status=document.getElementById('radioStatus');
+ if(!('speechSynthesis' in window)){status.textContent='このブラウザは音声読み上げに対応していません。ChromeまたはEdgeでお試しください。';return}
+ stopRadio();
+ radioUtterance=new SpeechSynthesisUtterance(document.getElementById('radioScript').textContent);
+ radioUtterance.lang='ja-JP';radioUtterance.rate=1.02;radioUtterance.pitch=1.05;radioUtterance.volume=1;
+ const jp=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.toLowerCase().startsWith('ja'));if(jp)radioUtterance.voice=jp;
+ radioUtterance.onstart=()=>{status.textContent='🔊 音声を再生中です…';document.getElementById('playRadioBtn').textContent='↻ 最初から再生'};
+ radioUtterance.onend=()=>{status.textContent='再生が終了しました。';document.getElementById('playRadioBtn').textContent='▶ もう一度再生'};
+ radioUtterance.onerror=()=>{status.textContent='再生できませんでした。端末の音量とブラウザ設定をご確認ください。'};
+ speechSynthesis.speak(radioUtterance);
+}
+function stopRadio(){
+ if('speechSynthesis' in window)speechSynthesis.cancel();
+ const status=document.getElementById('radioStatus');if(status)status.textContent='停止中。再生ボタンで最初から聞けます。';
+ const btn=document.getElementById('playRadioBtn');if(btn)btn.textContent='▶ 音声を再生';
+}
+function retryChallenge(){
+ saveResult();
+ Object.assign(state,{quizIndex:0,quizScore:0,quizAnswered:false,detectorIndex:0,detectScore:0,promptScore:0,storyScore:0,storyIndex:0});
+ state.completed=new Set();navRender();
+ document.getElementById('accountStatus').innerHTML=`<strong>${escapeHtml(currentAccount)}</strong> さんの結果を保存しました。通常チャレンジ、または前回と同じ問題で復習できます。`;
+ document.getElementById('weakChallengeBtn').classList.remove('d-none');
+ go('home');
+}
+async function copyRadio(){
+ try{await navigator.clipboard.writeText(document.getElementById('radioScript').textContent);toast('スクリプトをコピーしました')}catch(e){toast('コピーできませんでした。テキストを選択してコピーしてください')}
+}
+function toast(msg){const n=document.createElement('div');n.className='toast-note';n.textContent=msg;document.body.append(n);setTimeout(()=>n.remove(),2400)}
+function save(){
+ try{localStorage.setItem('aiTeacherNavigatorV3',JSON.stringify({...state,completed:[...state.completed]}))}catch(e){}
+}
+function load(){
+ try{const d=JSON.parse(localStorage.getItem('aiTeacherNavigatorV3'));if(d){Object.assign(state,d);state.completed=new Set(d.completed||[])}}catch(e){}
+}
+document.getElementById('menuBtn').onclick=()=>document.getElementById('sidebar').classList.toggle('open');
+document.addEventListener('click',e=>{if(innerWidth<992&&!e.target.closest('#sidebar')&&!e.target.closest('#menuBtn'))document.getElementById('sidebar').classList.remove('open')});
+navRender();renderQuiz();
+</script>
+</body>
+</html>
